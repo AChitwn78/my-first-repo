@@ -1,0 +1,74 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="description" content="Plan your next cycling ride around the weather." />
+    <meta name="theme-color" content="#0d1220" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+    <meta name="apple-mobile-web-app-title" content="Ridewise" />
+    <title>Ridewise — Route Planner</title>
+    <link rel="manifest" href="manifest.webmanifest" />
+    <link rel="apple-touch-icon" href="icon.svg" />
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <header class="topbar">
+      <a class="brand" href="#top" aria-label="Ridewise home">ridewise<span>.</span></a>
+      <nav class="menu-bar" aria-label="Application menu">
+        <details class="menu"><summary>File</summary><div class="menu-panel"><button type="button">New plan <span>⌘N</span></button><button type="button">Import rides…</button><hr /><button type="button">Save plan <span>⌘S</span></button></div></details>
+        <details class="menu"><summary>Edit</summary><div class="menu-panel"><button type="button">Undo <span>⌘Z</span></button><button type="button">Preferences…</button></div></details>
+        <details class="menu"><summary>View</summary><div class="menu-panel"><button type="button">Routes</button><button type="button">Weather detail</button></div></details>
+        <details class="menu"><summary>Windows</summary><div class="menu-panel menu-panel-right"><button type="button">Plan a ride</button><button type="button">My routes</button></div></details>
+      </nav>
+    </header>
+
+    <main id="top">
+      <section class="planner">
+        <div class="planner-copy">
+          <p class="eyebrow">YOUR PERSONAL RIDE ADVISOR</p>
+          <h1>Make the weather<br />work for you.</h1>
+          <p class="intro">Choose a ride window and we'll rank your familiar routes by wind, distance, elevation, and conditions.</p>
+          <div class="forecast-pill"><span class="sun">☀</span><span><strong>Tomorrow looks good.</strong> 61–76°F · dry until evening</span></div>
+        </div>
+
+        <form id="ride-form" class="ride-form">
+          <div class="form-heading"><h2>Plan tomorrow's ride</h2><span class="demo-badge">DEMO DATA</span></div>
+          <label>How far do you want to ride?
+            <span class="range-row"><input id="distance" type="range" min="25" max="80" value="50" step="1" /><output id="distance-output">50 mi</output></span>
+          </label>
+          <div class="two-columns">
+            <label>When?
+              <select id="ride-time"><option value="7">Tomorrow · 7:00 AM</option><option value="8" selected>Tomorrow · 8:00 AM</option><option value="9">Tomorrow · 9:00 AM</option><option value="10">Tomorrow · 10:00 AM</option></select>
+            </label>
+            <label>Ride type
+              <select id="ride-type"><option value="normal">Normal</option><option value="easy">Easy / recovery</option><option value="training">Training</option></select>
+            </label>
+          </div>
+          <label>Wind preference
+            <select id="wind-preference"><option value="headwind-early" selected>Headwind early, tailwind home</option><option value="tailwind-early">Tailwind early</option><option value="least-wind">Least wind exposure</option></select>
+          </label>
+          <button class="primary-button" type="submit">Find my ride <span>→</span></button>
+        </form>
+      </section>
+
+      <section id="recommendations" class="results" aria-live="polite">
+        <div class="section-heading"><div><p class="eyebrow">RECOMMENDATIONS</p><h2>Your best routes for tomorrow</h2></div><p id="conditions-summary" class="conditions-summary">SSW 11 mph at 8 AM</p></div>
+        <div id="route-list" class="route-list"></div>
+      </section>
+
+      <section class="method">
+        <div><p class="eyebrow">WHY THIS ROUTE?</p><h2>Real route geometry,<br />not guesswork.</h2></div>
+        <p>Each route is divided into small GPS segments. The planner compares the direction of every segment with the expected wind at the time you'll reach it—so “headwind out, tailwind home” is based on the road beneath your wheels.</p>
+        <div class="method-stats"><span><strong id="route-count">4</strong> saved routes</span><span><strong>0</strong> rain hours</span><span><strong>76°</strong> high</span></div>
+      </section>
+    </main>
+    <nav class="mobile-dock" aria-label="Quick navigation">
+      <a href="#top"><span aria-hidden="true">⌂</span>Plan</a>
+      <a href="#recommendations"><span aria-hidden="true">◎</span>Routes</a>
+      <button id="install-button" type="button" hidden><span aria-hidden="true">＋</span>Install</button>
+    </nav>
+    <script src="script.js"></script>
+  </body>
+</html>
