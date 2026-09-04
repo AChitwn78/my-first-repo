@@ -111,7 +111,7 @@
       </div>
       <section class="import-card">
         <div><h3>Import activity archive</h3><p>On Mac, choose the unzipped Strava export folder. On iPhone, choose the original ZIP from Files or iCloud Drive. GPX files are read only on this device.</p></div>
-        <div class="import-actions"><button id="import-rides-button" class="outline-button" type="button">Choose folder</button><button id="import-zip-button" class="outline-button" type="button">Choose ZIP</button></div>
+        <div class="import-actions"><label class="outline-button" for="activity-folder-input">Choose folder</label><label class="outline-button" for="activity-zip-input">Choose ZIP</label></div>
       </section>
       <p id="import-status" class="import-status" aria-live="polite"></p>
       <section class="connection-card">
@@ -143,8 +143,8 @@
         <p class="demo-copy">Demo only — no account or password is requested here.</p>
       </section>
     </dialog>
-    <input id="activity-folder-input" type="file" accept=".gpx,.fit,.tcx,.csv" multiple webkitdirectory directory hidden />
-    <input id="activity-zip-input" type="file" accept=".zip,application/zip,application/x-zip-compressed" hidden />
+    <input id="activity-folder-input" class="file-picker-input" type="file" accept=".gpx,.fit,.tcx,.csv" multiple webkitdirectory directory />
+    <input id="activity-zip-input" class="file-picker-input" type="file" accept=".zip,application/zip,application/x-zip-compressed" />
     <dialog id="route-preview-dialog" class="route-preview-dialog" aria-labelledby="route-preview-title">
       <div class="dialog-header">
         <div><p id="route-preview-origin" class="eyebrow">ROUTE PREVIEW</p><h2 id="route-preview-title">Route name</h2></div>
