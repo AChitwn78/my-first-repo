@@ -20,6 +20,7 @@ const routeList = document.querySelector("#route-list");
 const conditionsSummary = document.querySelector("#conditions-summary");
 const hourlyForecastElement = document.querySelector("#hourly-forecast");
 const daySelect = document.querySelector("#ride-day");
+const rideTimeSelect = document.querySelector("#ride-time");
 const warning = document.querySelector("#ride-warning");
 const menus = document.querySelectorAll(".menu");
 const installButton = document.querySelector("#install-button");
@@ -49,7 +50,8 @@ function renderDayDetails(day, hour) {
   document.querySelector("#hero-weather-summary").textContent = day.summary;
   document.querySelector("#forecast-eyebrow").textContent = `${dayLabel(day.dayIndex).toUpperCase()}'S FORECAST`;
   document.querySelector("#forecast-title").textContent = `${dayLabel(day.dayIndex)} · ${dayDate(day.dayIndex)}`;
-  document.querySelector("#recommendations-title").textContent = `Your best routes for ${dayLabel(day.dayIndex).toLowerCase()}`;
+  document.querySelector("#planner-title").textContent = day.dayIndex === 0 ? "Plan tomorrow's ride" : `Plan ${dayLabel(day.dayIndex)}'s ride`;
+  document.querySelector("#recommendations-title").textContent = `Your best routes for ${dayLabel(day.dayIndex)}`;
   document.querySelector("#rain-hours").textContent = day.hours.filter(item => item.precipitation >= 40).length;
   document.querySelector("#day-high").textContent = `${Math.max(...day.hours.map(item => item.temp))}°`;
   const warnings = [];
@@ -101,5 +103,6 @@ installButton.addEventListener("click", async () => {
 });
 window.addEventListener("appinstalled", () => { installButton.hidden = true; });
 daySelect.innerHTML = weatherDays.map((day, index) => `<option value="${index}">${dayLabel(index)} · ${dayDate(index)}</option>`).join("");
+rideTimeSelect.innerHTML = weatherDays[0].hours.slice(1).map(item => `<option value="${item.hour}"${item.hour === 8 ? " selected" : ""}>${formatHour(item.hour)}</option>`).join("");
 if ("serviceWorker" in navigator) window.addEventListener("load", () => navigator.serviceWorker.register("service-worker.js"));
 renderRoutes();

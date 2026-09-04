@@ -34,7 +34,7 @@
         </div>
 
         <form id="ride-form" class="ride-form">
-          <div class="form-heading"><h2>Plan tomorrow's ride</h2><span class="demo-badge">DEMO DATA</span></div>
+          <div class="form-heading"><h2 id="planner-title">Plan tomorrow's ride</h2><span class="demo-badge">DEMO DATA</span></div>
           <label>How far do you want to ride?
             <span class="range-row"><input id="distance" type="range" min="25" max="80" value="50" step="1" /><output id="distance-output">50 mi</output></span>
           </label>
@@ -42,8 +42,8 @@
             <label>Start day
               <select id="ride-day" aria-label="Start day"></select>
             </label>
-            <label>When?
-              <select id="ride-time"><option value="7">Tomorrow · 7:00 AM</option><option value="8" selected>Tomorrow · 8:00 AM</option><option value="9">Tomorrow · 9:00 AM</option><option value="10">Tomorrow · 10:00 AM</option></select>
+            <label>Start time
+              <select id="ride-time"><option value="7">7:00 AM</option><option value="8" selected>8:00 AM</option><option value="9">9:00 AM</option><option value="10">10:00 AM</option></select>
             </label>
             <label>Ride type
               <select id="ride-type"><option value="normal">Normal</option><option value="easy">Easy / recovery</option><option value="training">Training</option></select>

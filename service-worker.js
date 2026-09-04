@@ -1,4 +1,4 @@
-const CACHE_NAME = "ridewise-v3";
+const CACHE_NAME = "ridewise-v4";
 const APP_FILES = ["./", "index.html", "styles.css", "script.js", "manifest.webmanifest", "icon.svg"];
 
 self.addEventListener("install", event => {
