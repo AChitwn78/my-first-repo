@@ -41,7 +41,6 @@ const activityZipInput = document.querySelector("#activity-zip-input");
 const importStatus = document.querySelector("#import-status");
 const sampleRoutesStatus = document.querySelector("#sample-routes-status");
 const loadSampleRoutesButton = document.querySelector("#load-sample-routes");
-const SAMPLE_ARCHIVE_URL = "https://drive.usercontent.google.com/download?id=1e9Z5qjUv_es1ydBR7rQUYa9tIFzgpifE&export=download&confirm=t";
 let isStravaConnected = false;
 let isGarminConnected = false;
 let currentLocation = null;
@@ -279,21 +278,6 @@ async function processActivityImport(importer, statusElement = importStatus, sou
     statusElement.textContent = error.message || "The import could not be completed.";
   }
 }
-async function downloadSampleArchive() {
-  if (!window.JSZip) throw new Error("ZIP support could not load. Check your connection, then try again.");
-  const response = await fetch(SAMPLE_ARCHIVE_URL);
-  if (!response.ok) throw new Error("The public sample archive could not be downloaded.");
-  const size = Number(response.headers.get("content-length"));
-  if (!response.body) return response.blob();
-  const reader = response.body.getReader(); const chunks = []; let received = 0;
-  while (true) {
-    const { done, value } = await reader.read();
-    if (done) break;
-    chunks.push(value); received += value.length;
-    sampleRoutesStatus.textContent = size ? `Downloading public sample routes… ${Math.round(received / size * 100)}%` : "Downloading public sample routes…";
-  }
-  return new Blob(chunks, { type: "application/zip" });
-}
 distance.addEventListener("input", () => { distanceOutput.textContent = `${distance.value} mi`; });
 document.querySelector("#ride-time").addEventListener("change", renderRoutes);
 daySelect.addEventListener("change", renderRoutes);
@@ -316,9 +300,20 @@ activityZipInput?.addEventListener("change", async event => {
 loadSampleRoutesButton?.addEventListener("click", async () => {
   loadSampleRoutesButton.disabled = true;
   sampleRoutesStatus.dataset.state = "";
-  sampleRoutesStatus.textContent = "Downloading public sample routes…";
+  sampleRoutesStatus.textContent = "Loading public sample routes…";
   try {
-    await processActivityImport(async onProgress => importActivityZip(await downloadSampleArchive(), onProgress), sampleRoutesStatus, "the public Ridewise archive");
+    const response = await fetch("sample-routes.json");
+    if (!response.ok) throw new Error("The public sample routes could not be loaded.");
+    const routes = await response.json();
+    if (!Array.isArray(routes) || !routes.length || !routes.every(route => Array.isArray(route.path) && route.path.length > 1)) throw new Error("The public sample route data is invalid.");
+    importedRoutes = routes;
+    saveImportedRoutes(importedRoutes);
+    sampleRoutesStatus.dataset.state = "success";
+    sampleRoutesStatus.textContent = `Loaded ${importedRoutes.length} public Ridewise route patterns on this device.`;
+    renderRoutes();
+  } catch (error) {
+    sampleRoutesStatus.dataset.state = "error";
+    sampleRoutesStatus.textContent = error.message || "The public sample routes could not be loaded.";
   } finally {
     loadSampleRoutesButton.disabled = false;
   }
