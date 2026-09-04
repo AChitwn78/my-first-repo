@@ -7,15 +7,15 @@
     <meta name="theme-color" content="#0d1220" />
     <meta name="apple-mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
-    <meta name="apple-mobile-web-app-title" content="Ridewise" />
-    <title>Ridewise — Route Planner</title>
+    <meta name="apple-mobile-web-app-title" content="Ridewise™" />
+    <title>Ridewise™ — Route Planner</title>
     <link rel="manifest" href="manifest.webmanifest" />
     <link rel="apple-touch-icon" href="icon.svg" />
     <link rel="stylesheet" href="styles.css" />
   </head>
   <body>
     <header class="topbar">
-      <a class="brand" href="#top" aria-label="Ridewise home">ridewise<span>.</span></a>
+      <a class="brand" href="#top" aria-label="Ridewise™ home">ridewise<span>.</span><sup>™</sup></a>
       <nav class="menu-bar" aria-label="Application menu">
         <details class="menu"><summary>File</summary><div class="menu-panel"><button type="button">New plan <span>⌘N</span></button><button type="button">Import rides…</button><hr /><button type="button">Save plan <span>⌘S</span></button></div></details>
         <details class="menu"><summary>Edit</summary><div class="menu-panel"><button type="button">Undo <span>⌘Z</span></button><button type="button">Preferences…</button></div></details>
@@ -29,7 +29,13 @@
         <div class="planner-copy">
           <p class="eyebrow">YOUR PERSONAL RIDE ADVISOR</p>
           <h1>Make the weather<br />work for you.</h1>
-          <p class="intro">Choose a ride window and we'll rank your familiar routes by wind, distance, elevation, and conditions.</p>
+          <div class="intro-with-qr">
+            <p class="intro">Choose a ride window and we'll rank your familiar routes by wind, distance, elevation, and conditions.</p>
+            <a class="qr-card" href="https://achitwn78.github.io/my-first-repo/" aria-label="Open Ridewise™">
+              <img src="qr-code.svg" alt="QR code linking to Ridewise™" />
+              <span>Scan to open</span>
+            </a>
+          </div>
           <div class="forecast-pill"><span id="hero-weather-icon" class="sun">☀</span><span><strong id="hero-weather-title">Tomorrow looks good.</strong> <span id="hero-weather-summary">61–76°F · dry until evening</span></span></div>
         </div>
 
@@ -99,11 +105,11 @@
         <div><h3>Strava</h3><p id="strava-status">Not connected</p></div>
         <button id="connect-strava" class="outline-button" type="button">Connect</button>
       </section>
-      <p class="connection-note">Connect your Strava account to import cycling activities, discover familiar routes, and replace the demo data. You will sign in directly with Strava—Ridewise never sees your password.</p>
+      <p class="connection-note">Connect your Strava account to import cycling activities, discover familiar routes, and replace the demo data. You will sign in directly with Strava—Ridewise™ never sees your password.</p>
       <section id="strava-consent" class="strava-consent" hidden>
         <div class="strava-mark" aria-hidden="true">STRAVA</div>
         <h3>Connect your Strava account</h3>
-        <p>Production Ridewise will open Strava's official consent screen and request permission to read your cycling activities and routes.</p>
+        <p>Production Ridewise™ will open Strava's official consent screen and request permission to read your cycling activities and routes.</p>
         <button id="complete-demo-connection" class="primary-button" type="button">Continue with Strava <span>→</span></button>
         <button id="cancel-connection" class="text-button" type="button">Not now</button>
         <p class="demo-copy">Demo only — no account or password is requested here.</p>

@@ -1,6 +1,6 @@
 {
-  "name": "Ridewise — Cycling Route Planner",
-  "short_name": "Ridewise",
+  "name": "Ridewise™ — Cycling Route Planner",
+  "short_name": "Ridewise™",
   "description": "Plan your next cycling ride around the weather.",
   "start_url": "./",
   "display": "standalone",
