@@ -139,6 +139,9 @@ function openRoutePreview(index) {
   document.querySelector("#preview-score").textContent = route.score;
   document.querySelector("#preview-reason").textContent = route.reason;
   document.querySelector("#preview-note").textContent = route.exploring ? "Illustrative preview only. Live routing will show the exact streets, route surface and navigation-ready GPX." : "Illustrative preview only. Connect Strava to use your actual saved route geometry and activity history.";
+  const exportStatus = document.querySelector("#garmin-export-status");
+  exportStatus.hidden = true;
+  exportStatus.textContent = "";
   const paths = ["M33 167 C72 113 111 191 147 118 S211 41 260 80 S306 164 327 54", "M33 167 C91 90 119 105 166 165 S259 196 302 120 S278 48 327 54", "M33 167 C72 207 112 184 157 100 S237 42 272 132 S304 95 327 54"];
   document.querySelector("#preview-route-line").setAttribute("d", paths[index % paths.length]);
   routePreviewDialog.showModal();
@@ -164,6 +167,11 @@ routeList.addEventListener("click", event => { const card = event.target.closest
 routeList.addEventListener("keydown", event => { if ((event.key === "Enter" || event.key === " ") && event.target.closest(".route-card")) { event.preventDefault(); openRoutePreview(Number(event.target.closest(".route-card").dataset.routeIndex)); } });
 document.querySelector("#close-route-preview")?.addEventListener("click", () => routePreviewDialog?.close());
 document.querySelector("#preview-close-button")?.addEventListener("click", () => routePreviewDialog?.close());
+document.querySelector("#export-garmin-button")?.addEventListener("click", () => {
+  const exportStatus = document.querySelector("#garmin-export-status");
+  exportStatus.hidden = false;
+  exportStatus.textContent = "Demo preview: Garmin export will be available after Ridewise™ is approved for Garmin's Courses API and the route has real GPS geometry.";
+});
 routePreviewDialog?.addEventListener("click", event => { if (event.target === routePreviewDialog) routePreviewDialog.close(); });
 settingsButton?.addEventListener("click", () => settingsDialog?.showModal());
 document.querySelector("#close-settings")?.addEventListener("click", () => settingsDialog?.close());

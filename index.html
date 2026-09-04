@@ -130,6 +130,7 @@
         <button id="close-route-preview" class="icon-button" type="button" aria-label="Close route preview">×</button>
       </div>
       <div class="route-map-preview" aria-label="Illustrative route preview">
+        <span class="preview-demo-badge">DEMO</span>
         <span class="map-label start-label">START</span><span class="map-label finish-label">FINISH</span>
         <svg viewBox="0 0 360 220" role="img" aria-label="Preview of a cycling route loop">
           <path class="map-road" d="M33 167 C72 113 111 191 147 118 S211 41 260 80 S306 164 327 54" />
@@ -140,6 +141,8 @@
       <div class="preview-stats"><span><strong id="preview-distance">50 mi</strong>distance</span><span><strong id="preview-elevation">850 ft</strong>climbing</span><span><strong id="preview-score">92</strong>ride match</span></div>
       <p id="preview-reason" class="preview-reason"></p>
       <p id="preview-note" class="preview-note"></p>
+      <button id="export-garmin-button" class="outline-button export-button" type="button">Export to Garmin <span aria-hidden="true">↗</span></button>
+      <p id="garmin-export-status" class="export-status" hidden aria-live="polite"></p>
       <button id="preview-close-button" class="primary-button" type="button">Done <span>→</span></button>
     </dialog>
     <nav class="mobile-dock" aria-label="Quick navigation">
