@@ -28,8 +28,6 @@ const connectStravaButton = document.querySelector("#connect-strava");
 const stravaConsent = document.querySelector("#strava-consent");
 const stravaStatus = document.querySelector("#strava-status");
 const menus = document.querySelectorAll(".menu");
-const installButton = document.querySelector("#install-button");
-let installPrompt;
 let isStravaConnected = false;
 
 function dayLabel(index) {
@@ -61,12 +59,15 @@ function renderDayDetails(day, hour) {
   document.querySelector("#rain-hours").textContent = day.hours.filter(item => item.precipitation >= 40).length;
   document.querySelector("#day-high").textContent = `${Math.max(...day.hours.map(item => item.temp))}°`;
   const warnings = [];
-  if (weather.precipitation >= 40) warnings.push(`${weather.precipitation}% chance of precipitation at your planned start time`);
-  if (weather.gusts >= 28) warnings.push(`gusts up to ${weather.gusts} mph`);
-  if (weather.temp <= 45 || weather.temp >= 90) warnings.push(`${weather.temp}° temperature at departure`);
-  if (/Thunderstorm/.test(day.hours.find(item => item.hour === hour)?.condition || "")) warnings.push("thunderstorms are forecast");
+  const laterConditions = day.hours.filter(item => item.hour > hour && item.hour <= hour + 3);
+  const upcomingStorm = laterConditions.find(item => /Thunderstorm/.test(item.condition));
+  if (weather.precipitation >= 40) warnings.push(`Rain is likely at ${formatHour(hour)} (${weather.precipitation}% chance), which can leave roads slick.`);
+  if (weather.gusts >= 28) warnings.push(`Wind gusts may reach ${weather.gusts} mph at departure.`);
+  if (weather.temp <= 45 || weather.temp >= 90) warnings.push(`The expected ${weather.temp}° departure temperature may be uncomfortable.`);
+  if (upcomingStorm) warnings.push(`Thunderstorms are possible around ${formatHour(upcomingStorm.hour)} during your ride.`);
   warning.hidden = warnings.length === 0;
-  document.querySelector("#warning-copy").textContent = warnings.length ? `Consider another day or departure time: ${warnings.join(" and ")}.` : "";
+  document.querySelector("#warning-title").textContent = warnings.length ? "Why riding conditions need attention" : "";
+  document.querySelector("#warning-copy").textContent = warnings.length ? warnings.join(" ") : "";
 }
 function windComponent(routeHeading, windFrom, speed) { return Math.cos((routeHeading - windFrom) * Math.PI / 180) * speed; }
 function scoreRoute(route, desiredMiles, preference, rideType, weather) {
@@ -120,15 +121,6 @@ settingsDialog.addEventListener("click", event => { if (event.target === setting
 form.addEventListener("submit", event => { event.preventDefault(); renderRoutes(); document.querySelector(".results").scrollIntoView({ behavior: "smooth", block: "start" }); });
 menus.forEach(menu => menu.addEventListener("toggle", () => { if (menu.open) menus.forEach(other => { if (other !== menu) other.open = false; }); }));
 document.addEventListener("click", event => { if (!event.target.closest(".menu")) menus.forEach(menu => { menu.open = false; }); });
-window.addEventListener("beforeinstallprompt", event => { event.preventDefault(); installPrompt = event; installButton.hidden = false; });
-installButton.addEventListener("click", async () => {
-  if (!installPrompt) return;
-  installPrompt.prompt();
-  await installPrompt.userChoice;
-  installPrompt = undefined;
-  installButton.hidden = true;
-});
-window.addEventListener("appinstalled", () => { installButton.hidden = true; });
 daySelect.innerHTML = weatherDays.map((day, index) => `<option value="${index}">${dayLabel(index)} · ${dayDate(index)}</option>`).join("");
 rideTimeSelect.innerHTML = weatherDays[0].hours.slice(1).map(item => `<option value="${item.hour}"${item.hour === 8 ? " selected" : ""}>${formatHour(item.hour)}</option>`).join("");
 if ("serviceWorker" in navigator) window.addEventListener("load", () => navigator.serviceWorker.register("service-worker.js"));
