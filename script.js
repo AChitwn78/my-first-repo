@@ -1,4 +1,4 @@
-const routes = [
+const demoRoutes = [
   { name: "Morris Loop", miles: 51.8, elevation: 820, outboundHeading: 202, rides: 47 },
   { name: "Yorkville South", miles: 48.9, elevation: 690, outboundHeading: 190, rides: 24 },
   { name: "Plainfield West", miles: 46.4, elevation: 510, outboundHeading: 264, rides: 31 },
@@ -36,10 +36,13 @@ const useLocationButton = document.querySelector("#use-location");
 const locationStatus = document.querySelector("#explore-location");
 const findRideButton = document.querySelector("#find-ride-button");
 const routePreviewDialog = document.querySelector("#route-preview-dialog");
+const activityFolderInput = document.querySelector("#activity-folder-input");
+const importStatus = document.querySelector("#import-status");
 let isStravaConnected = false;
 let isGarminConnected = false;
 let currentLocation = null;
 let displayedRoutes = [];
+let importedRoutes = loadImportedRoutes();
 
 daySelect.innerHTML = weatherDays.map((day, index) => `<option value="${index}">${dayLabel(index)} · ${dayDate(index)}</option>`).join("");
 rideTimeSelect.innerHTML = weatherDays[0].hours.slice(1).map(item => `<option value="${item.hour}"${item.hour === 8 ? " selected" : ""}>${formatHour(item.hour)}</option>`).join("");
@@ -54,6 +57,8 @@ function dayDate(index) {
 }
 function selectedDay() { return weatherDays[Number(daySelect.value)]; }
 function routeMode() { return document.querySelector('input[name="route-mode"]:checked').value; }
+function loadImportedRoutes() { try { return JSON.parse(localStorage.getItem("ridewise-imported-routes") || "[]"); } catch { return []; } }
+function saveImportedRoutes(routesToSave) { localStorage.setItem("ridewise-imported-routes", JSON.stringify(routesToSave)); }
 function windForHour(hour, day = selectedDay()) {
   const forecast = day.hours.find(item => item.hour === hour) || day.hours[2];
   return { from: forecast.direction === "SW" ? 225 : 205, speed: forecast.speed, label: forecast.direction, gusts: forecast.gusts, temp: forecast.temp, precipitation: forecast.precipitation };
@@ -119,30 +124,32 @@ function renderRouteMode() {
 function renderRoutes() {
   const desiredMiles = Number(distance.value); const hour = Number(document.querySelector("#ride-time").value); const preference = document.querySelector("#wind-preference").value; const rideType = document.querySelector("#ride-type").value; const day = selectedDay(); const weather = windForHour(hour, day);
   const exploring = routeMode() === "explore";
-  const baseRoutes = exploring ? exploredRoutes(desiredMiles) : routes;
+  const savedRoutes = importedRoutes.length ? importedRoutes : demoRoutes;
+  const baseRoutes = exploring ? exploredRoutes(desiredMiles) : savedRoutes;
   const sorted = baseRoutes.map(route => ({ ...route, score: scoreRoute(route, desiredMiles, preference, rideType, weather) })).sort((a, b) => b.score - a.score);
   conditionsSummary.textContent = `${weather.label} ${weather.speed} mph at ${hour}:00 AM`;
   renderHourlyForecast(hour, day);
   renderDayDetails(day, hour);
   document.querySelector("#recommendations-eyebrow").textContent = exploring ? "EXPLORE ROUTES · DEMO" : "RECOMMENDATIONS";
   document.querySelector("#recommendations-title").textContent = exploring ? `Wind-aware routes for ${dayLabel(day.dayIndex)}` : `Your best routes for ${dayLabel(day.dayIndex)}`;
-  document.querySelector("#route-count").textContent = exploring ? "3" : routes.length;
-  document.querySelector("#route-count-label").textContent = exploring ? "route ideas" : "saved routes";
+  document.querySelector("#route-count").textContent = exploring ? "3" : savedRoutes.length;
+  document.querySelector("#route-count-label").textContent = exploring ? "route ideas" : importedRoutes.length ? "imported routes" : "saved routes";
   document.querySelector("#method-title").innerHTML = exploring ? "Routes built around<br />your ride window." : "Real route geometry,<br />not guesswork.";
   document.querySelector("#method-copy").textContent = exploring ? "This prototype creates route concepts from your chosen distance and wind preference. Production Ridewise™ will request routes from a cycling-aware map service, check road access and elevation, then return usable map geometry and GPX export." : "Each route is divided into small GPS segments. The planner compares the direction of every segment with the expected wind at the time you'll reach it—so “headwind out, tailwind home” is based on the road beneath your wheels.";
-  displayedRoutes = sorted.map(route => ({ ...route, reason: routeReason(route, preference, weather), exploring }));
-  routeList.innerHTML = displayedRoutes.map((route, index) => `<article class="route-card" data-route-index="${index}" role="button" tabindex="0" aria-label="Preview ${route.name}"><div class="rank">${["🥇", "🥈", "🥉", "4"][index]}</div><div><h3 class="route-name">${route.name}</h3><p class="route-meta">${route.miles.toFixed(1)} mi · ${route.elevation.toLocaleString()} ft · ${exploring ? route.detail : `ridden ${route.rides} times`}</p>${exploring ? `<span class="route-origin">${route.origin}</span>` : ""}</div><p class="route-reason">${route.reason}</p><div class="score"><strong>${route.score}</strong><span>ride match</span></div></article>`).join("");
+  const visibleRoutes = sorted.slice(0, exploring ? 3 : importedRoutes.length ? 12 : 4);
+  displayedRoutes = visibleRoutes.map(route => ({ ...route, reason: routeReason(route, preference, weather), exploring }));
+  routeList.innerHTML = displayedRoutes.map((route, index) => `<article class="route-card" data-route-index="${index}" role="button" tabindex="0" aria-label="Preview ${route.name}"><div class="rank">${["🥇", "🥈", "🥉", "4"][index]}</div><div><h3 class="route-name">${route.name}</h3><p class="route-meta">${route.miles.toFixed(1)} mi · ${route.elevation.toLocaleString()} ft · ${exploring ? route.detail : `ridden ${route.rides} times`}</p>${exploring ? `<span class="route-origin">${route.origin}</span>` : route.imported ? `<span class="route-origin">Imported from Strava export</span>` : ""}</div><p class="route-reason">${route.reason}</p><div class="score"><strong>${route.score}</strong><span>ride match</span></div></article>`).join("");
 }
 function openRoutePreview(index) {
   const route = displayedRoutes[index];
   if (!route || !routePreviewDialog) return;
-  document.querySelector("#route-preview-origin").textContent = route.exploring ? "EXPLORE ROUTE · DEMO" : "SAVED ROUTE PREVIEW";
+  document.querySelector("#route-preview-origin").textContent = route.exploring ? "EXPLORE ROUTE · DEMO" : route.imported ? "IMPORTED ROUTE SUMMARY" : "SAVED ROUTE PREVIEW";
   document.querySelector("#route-preview-title").textContent = route.name;
   document.querySelector("#preview-distance").textContent = `${route.miles.toFixed(1)} mi`;
   document.querySelector("#preview-elevation").textContent = `${route.elevation.toLocaleString()} ft`;
   document.querySelector("#preview-score").textContent = route.score;
   document.querySelector("#preview-reason").textContent = route.reason;
-  document.querySelector("#preview-note").textContent = route.exploring ? "Illustrative preview only. Live routing will show the exact streets, route surface and navigation-ready GPX." : "Illustrative preview only. Connect Strava to use your actual saved route geometry and activity history.";
+  document.querySelector("#preview-note").textContent = route.exploring ? "Illustrative preview only. Live routing will show the exact streets, route surface and navigation-ready GPX." : route.imported ? "Your real activity summary was imported locally. This map line remains illustrative because Ridewise stores only the route summary, not your raw GPS track." : "Illustrative preview only. Connect Strava to use your actual saved route geometry and activity history.";
   const exportStatus = document.querySelector("#garmin-export-status");
   exportStatus.hidden = true;
   exportStatus.textContent = "";
@@ -150,10 +157,88 @@ function openRoutePreview(index) {
   document.querySelector("#preview-route-line").setAttribute("d", paths[index % paths.length]);
   routePreviewDialog.showModal();
 }
+function parseCsv(text) {
+  const rows = []; let row = []; let field = ""; let quoted = false;
+  for (let index = 0; index < text.length; index += 1) {
+    const character = text[index];
+    if (character === '"') { if (quoted && text[index + 1] === '"') { field += '"'; index += 1; } else quoted = !quoted; }
+    else if (character === "," && !quoted) { row.push(field); field = ""; }
+    else if ((character === "\n" || character === "\r") && !quoted) { if (character === "\r" && text[index + 1] === "\n") index += 1; row.push(field); if (row.some(value => value)) rows.push(row); row = []; field = ""; }
+    else field += character;
+  }
+  if (field || row.length) { row.push(field); rows.push(row); }
+  return rows;
+}
+function activityMetadata(csvText) {
+  const rows = parseCsv(csvText); const headers = rows.shift() || [];
+  const fieldIndex = name => headers.indexOf(name);
+  const filenameIndex = fieldIndex("Filename"); const nameIndex = fieldIndex("Activity Name"); const typeIndex = fieldIndex("Activity Type");
+  return new Map(rows.filter(row => row[filenameIndex]).map(row => [row[filenameIndex].split("/").pop(), { name: row[nameIndex] || "Imported ride", type: row[typeIndex] || "" }]));
+}
+function haversineMiles(a, b) {
+  const radians = degrees => degrees * Math.PI / 180; const radiusMiles = 3958.8;
+  const dLat = radians(b.lat - a.lat); const dLon = radians(b.lon - a.lon);
+  const value = Math.sin(dLat / 2) ** 2 + Math.cos(radians(a.lat)) * Math.cos(radians(b.lat)) * Math.sin(dLon / 2) ** 2;
+  return 2 * radiusMiles * Math.atan2(Math.sqrt(value), Math.sqrt(1 - value));
+}
+function bearing(a, b) {
+  const radians = degrees => degrees * Math.PI / 180; const degrees = value => (value * 180 / Math.PI + 360) % 360;
+  const delta = radians(b.lon - a.lon); const y = Math.sin(delta) * Math.cos(radians(b.lat)); const x = Math.cos(radians(a.lat)) * Math.sin(radians(b.lat)) - Math.sin(radians(a.lat)) * Math.cos(radians(b.lat)) * Math.cos(delta);
+  return degrees(Math.atan2(y, x));
+}
+function summarizeGpx(text, metadata, filename) {
+  const documentXml = new DOMParser().parseFromString(text, "application/xml");
+  const points = Array.from(documentXml.getElementsByTagName("trkpt")).map(point => ({ lat: Number(point.getAttribute("lat")), lon: Number(point.getAttribute("lon")), elevation: Number(point.getElementsByTagName("ele")[0]?.textContent) })).filter(point => Number.isFinite(point.lat) && Number.isFinite(point.lon));
+  if (points.length < 3) return null;
+  let miles = 0; let climbingMeters = 0;
+  for (let index = 1; index < points.length; index += 1) { miles += haversineMiles(points[index - 1], points[index]); const gain = points[index].elevation - points[index - 1].elevation; if (Number.isFinite(gain) && gain > 0) climbingMeters += gain; }
+  if (miles < 3 || miles > 250) return null;
+  let headingPoint = points[1]; let headingDistance = 0;
+  for (let index = 1; index < points.length && headingDistance < .06; index += 1) { headingDistance += haversineMiles(points[index - 1], points[index]); headingPoint = points[index]; }
+  return { name: metadata?.name || `Imported ride ${filename.replace(/\.[^.]+$/, "")}`, miles, elevation: Math.round(climbingMeters * 3.28084), outboundHeading: bearing(points[0], headingPoint), rides: 1, imported: true };
+}
+async function importActivityFolder(files) {
+  const filesToImport = Array.from(files); const activityCsv = filesToImport.find(file => file.name === "activities.csv");
+  const metadata = activityCsv ? activityMetadata(await activityCsv.text()) : new Map();
+  const gpxFiles = filesToImport.filter(file => /\.gpx$/i.test(file.name));
+  if (!gpxFiles.length) throw new Error("No GPX activity files were found. Choose the unzipped Strava export folder.");
+  const summaries = [];
+  for (let index = 0; index < gpxFiles.length; index += 1) {
+    const file = gpxFiles[index]; const activity = metadata.get(file.name);
+    if (activity && !/ride|cycling/i.test(activity.type)) continue;
+    const summary = summarizeGpx(await file.text(), activity, file.name); if (summary) summaries.push(summary);
+    if (index % 12 === 0) await new Promise(resolve => requestAnimationFrame(resolve));
+  }
+  const grouped = new Map();
+  summaries.forEach(summary => {
+    const key = `${summary.name.toLowerCase()}|${Math.round(summary.miles)}|${Math.round(summary.outboundHeading / 20)}`;
+    const existing = grouped.get(key); if (existing) existing.rides += 1; else grouped.set(key, summary);
+  });
+  return Array.from(grouped.values()).sort((a, b) => b.rides - a.rides || b.miles - a.miles);
+}
 distance.addEventListener("input", () => { distanceOutput.textContent = `${distance.value} mi`; });
 document.querySelector("#ride-time").addEventListener("change", renderRoutes);
 daySelect.addEventListener("change", renderRoutes);
 routeModeInputs.forEach(input => input.addEventListener("change", () => { renderRouteMode(); renderRoutes(); }));
+const chooseActivityFolder = () => activityFolderInput?.click();
+document.querySelector("#import-rides-button")?.addEventListener("click", chooseActivityFolder);
+document.querySelector("#import-rides-menu")?.addEventListener("click", chooseActivityFolder);
+activityFolderInput?.addEventListener("change", async event => {
+  const selectedFiles = event.target.files; if (!selectedFiles?.length) return;
+  importStatus.dataset.state = "";
+  importStatus.textContent = "Reading your activity archive locally…";
+  try {
+    importedRoutes = await importActivityFolder(selectedFiles);
+    if (!importedRoutes.length) throw new Error("No cycling GPX tracks were found in that folder.");
+    saveImportedRoutes(importedRoutes);
+    importStatus.dataset.state = "success";
+    importStatus.textContent = `Imported ${importedRoutes.length} route patterns from your Strava export. Demo routes have been replaced.`;
+    renderRoutes();
+  } catch (error) {
+    importStatus.dataset.state = "error";
+    importStatus.textContent = error.message || "The import could not be completed.";
+  } finally { event.target.value = ""; }
+});
 useLocationButton?.addEventListener("click", () => {
   if (!navigator.geolocation) { locationStatus.textContent = "Location is not available in this browser. Demo routes will remain near a sample location."; return; }
   useLocationButton.textContent = "Finding your location…";

@@ -17,7 +17,7 @@
     <header class="topbar">
       <a class="brand" href="#top" aria-label="Ridewise™ home">ridewise<span>.</span><sup>™</sup></a>
       <nav class="menu-bar" aria-label="Application menu">
-        <details class="menu"><summary>File</summary><div class="menu-panel"><button type="button">New plan <span>⌘N</span></button><button type="button">Import rides…</button><hr /><button type="button">Save plan <span>⌘S</span></button></div></details>
+        <details class="menu"><summary>File</summary><div class="menu-panel"><button type="button">New plan <span>⌘N</span></button><button id="import-rides-menu" type="button">Import Strava export…</button><hr /><button type="button">Save plan <span>⌘S</span></button></div></details>
         <details class="menu"><summary>Edit</summary><div class="menu-panel"><button type="button">Undo <span>⌘Z</span></button><button type="button">Preferences…</button></div></details>
         <details class="menu"><summary>View</summary><div class="menu-panel"><button type="button">Routes</button><button type="button">Weather detail</button></div></details>
         <details class="menu"><summary>Windows</summary><div class="menu-panel menu-panel-right"><button type="button">Plan a ride</button><button type="button">My routes</button></div></details>
@@ -109,6 +109,11 @@
         <div><p class="eyebrow">SETTINGS</p><h2 id="settings-title">Your ride data</h2></div>
         <button id="close-settings" class="icon-button" type="button" aria-label="Close settings">×</button>
       </div>
+      <section class="import-card">
+        <div><h3>Import activity archive</h3><p>Choose the unzipped Strava export folder. GPX files are read only on this device.</p></div>
+        <button id="import-rides-button" class="outline-button" type="button">Choose folder</button>
+      </section>
+      <p id="import-status" class="import-status" aria-live="polite"></p>
       <section class="connection-card">
         <div class="connection-logo" aria-hidden="true">S</div>
         <div><h3>Strava</h3><p id="strava-status">Not connected</p></div>
@@ -138,6 +143,7 @@
         <p class="demo-copy">Demo only — no account or password is requested here.</p>
       </section>
     </dialog>
+    <input id="activity-folder-input" type="file" accept=".gpx,.fit,.tcx,.csv" multiple webkitdirectory directory hidden />
     <dialog id="route-preview-dialog" class="route-preview-dialog" aria-labelledby="route-preview-title">
       <div class="dialog-header">
         <div><p id="route-preview-origin" class="eyebrow">ROUTE PREVIEW</p><h2 id="route-preview-title">Route name</h2></div>
