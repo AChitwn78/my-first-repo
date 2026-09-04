@@ -10,22 +10,22 @@
     </linearGradient>
   </defs>
   <rect width="512" height="512" rx="112" fill="url(#sky)"/>
-  <g aria-label="Partly cloudy weather">
+  <g aria-label="Partly cloudy weather at left of route">
     <g fill="none" stroke="#ffd166" stroke-linecap="round" stroke-width="10">
-      <path d="M372 68v-15"/><path d="M327 86l-11-11"/><path d="M314 128h-15"/>
-      <path d="M327 170l-11 11"/><path d="M372 186v15"/><path d="M417 170l11 11"/>
-      <path d="M430 128h15"/><path d="M417 86l11-11"/>
+      <path d="M132 52v-15"/><path d="M87 70L76 59"/><path d="M74 112H59"/>
+      <path d="M87 154l-11 11"/><path d="M132 170v15"/><path d="M177 154l11 11"/>
+      <path d="M190 112h15"/><path d="M177 70l11-11"/>
     </g>
-    <circle cx="372" cy="128" r="39" fill="#ffd166"/>
-    <path d="M343 168c0-17 13-30 30-30 5-17 19-27 37-27 21 0 38 17 38 38 14 1 25 12 25 27 0 16-13 29-29 29h-72c-16 0-29-13-29-29 0-3 0-5 1-8Z" fill="#aebfd0"/>
+    <circle cx="132" cy="112" r="39" fill="#ffd166"/>
+    <path d="M94 158c0-16 13-29 29-29 5-16 19-26 37-26 20 0 37 16 38 36 14 1 25 12 25 26 0 16-13 29-29 29h-72c-16 0-28-13-28-29 0-2 0-5 0-7Z" fill="#aebfd0"/>
   </g>
   <path d="M0 408C105 330 182 322 265 351c74 26 150 20 247-36v197H0Z" fill="#183d3a"/>
   <path d="M80 512C143 394 186 346 251 312c67-35 112-74 149-143" fill="none" stroke="url(#road)" stroke-linecap="round" stroke-width="70"/>
   <path d="M125 480c48-76 86-114 142-146 45-26 82-62 112-117" fill="none" stroke="#efffe6" stroke-dasharray="16 20" stroke-linecap="round" stroke-width="8"/>
-  <g fill="none" stroke="#a9d9df" stroke-linecap="round" stroke-width="9" opacity=".92">
-    <path d="M70 323c29-18 58-18 78-4 10 7 20 7 31 1"/>
-    <path d="M82 350c22-13 42-13 57-3"/>
-    <path d="M95 375c15-8 29-8 40-2"/>
+  <g fill="none" stroke="#a9d9df" stroke-linecap="round" stroke-width="9" opacity=".96">
+    <path d="M64 234c27-15 55-15 73-2 9 6 18 6 27 1"/>
+    <path d="M77 260c21-12 40-12 54-3"/>
+    <path d="M90 285c14-8 27-8 37-2"/>
   </g>
   <circle cx="180" cy="409" r="27" fill="#101827" stroke="#f5f9ff" stroke-width="9"/>
   <circle cx="180" cy="409" r="8" fill="#a7ef7d"/>
