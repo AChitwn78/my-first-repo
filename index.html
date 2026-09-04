@@ -53,6 +53,15 @@
         </form>
       </section>
 
+      <section id="forecast" class="forecast-detail" aria-labelledby="forecast-title">
+        <div class="section-heading">
+          <div><p class="eyebrow">TOMORROW'S FORECAST</p><h2 id="forecast-title">Plan your window</h2></div>
+          <p class="conditions-summary"><span class="demo-badge">DEMO DATA</span> Hourly conditions</p>
+        </div>
+        <p class="forecast-description">The highlighted hour matches your planned departure. Wind speeds are sustained; gusts are shown separately.</p>
+        <div id="hourly-forecast" class="hourly-forecast" aria-live="polite"></div>
+      </section>
+
       <section id="recommendations" class="results" aria-live="polite">
         <div class="section-heading"><div><p class="eyebrow">RECOMMENDATIONS</p><h2>Your best routes for tomorrow</h2></div><p id="conditions-summary" class="conditions-summary">SSW 11 mph at 8 AM</p></div>
         <div id="route-list" class="route-list"></div>
@@ -66,6 +75,7 @@
     </main>
     <nav class="mobile-dock" aria-label="Quick navigation">
       <a href="#top"><span aria-hidden="true">⌂</span>Plan</a>
+      <a href="#forecast"><span aria-hidden="true">☀</span>Weather</a>
       <a href="#recommendations"><span aria-hidden="true">◎</span>Routes</a>
       <button id="install-button" type="button" hidden><span aria-hidden="true">＋</span>Install</button>
     </nav>
