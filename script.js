@@ -32,8 +32,10 @@ const routeModeInputs = document.querySelectorAll('input[name="route-mode"]');
 const useLocationButton = document.querySelector("#use-location");
 const locationStatus = document.querySelector("#explore-location");
 const findRideButton = document.querySelector("#find-ride-button");
+const routePreviewDialog = document.querySelector("#route-preview-dialog");
 let isStravaConnected = false;
 let currentLocation = null;
+let displayedRoutes = [];
 
 daySelect.innerHTML = weatherDays.map((day, index) => `<option value="${index}">${dayLabel(index)} · ${dayDate(index)}</option>`).join("");
 rideTimeSelect.innerHTML = weatherDays[0].hours.slice(1).map(item => `<option value="${item.hour}"${item.hour === 8 ? " selected" : ""}>${formatHour(item.hour)}</option>`).join("");
@@ -124,7 +126,22 @@ function renderRoutes() {
   document.querySelector("#route-count-label").textContent = exploring ? "route ideas" : "saved routes";
   document.querySelector("#method-title").innerHTML = exploring ? "Routes built around<br />your ride window." : "Real route geometry,<br />not guesswork.";
   document.querySelector("#method-copy").textContent = exploring ? "This prototype creates route concepts from your chosen distance and wind preference. Production Ridewise™ will request routes from a cycling-aware map service, check road access and elevation, then return usable map geometry and GPX export." : "Each route is divided into small GPS segments. The planner compares the direction of every segment with the expected wind at the time you'll reach it—so “headwind out, tailwind home” is based on the road beneath your wheels.";
-  routeList.innerHTML = sorted.map((route, index) => `<article class="route-card"><div class="rank">${["🥇", "🥈", "🥉", "4"][index]}</div><div><h3 class="route-name">${route.name}</h3><p class="route-meta">${route.miles.toFixed(1)} mi · ${route.elevation.toLocaleString()} ft · ${exploring ? route.detail : `ridden ${route.rides} times`}</p>${exploring ? `<span class="route-origin">${route.origin}</span>` : ""}</div><p class="route-reason">${routeReason(route, preference, weather)}</p><div class="score"><strong>${route.score}</strong><span>wind score</span></div></article>`).join("");
+  displayedRoutes = sorted.map(route => ({ ...route, reason: routeReason(route, preference, weather), exploring }));
+  routeList.innerHTML = displayedRoutes.map((route, index) => `<article class="route-card" data-route-index="${index}" role="button" tabindex="0" aria-label="Preview ${route.name}"><div class="rank">${["🥇", "🥈", "🥉", "4"][index]}</div><div><h3 class="route-name">${route.name}</h3><p class="route-meta">${route.miles.toFixed(1)} mi · ${route.elevation.toLocaleString()} ft · ${exploring ? route.detail : `ridden ${route.rides} times`}</p>${exploring ? `<span class="route-origin">${route.origin}</span>` : ""}</div><p class="route-reason">${route.reason}</p><div class="score"><strong>${route.score}</strong><span>ride match</span></div></article>`).join("");
+}
+function openRoutePreview(index) {
+  const route = displayedRoutes[index];
+  if (!route || !routePreviewDialog) return;
+  document.querySelector("#route-preview-origin").textContent = route.exploring ? "EXPLORE ROUTE · DEMO" : "SAVED ROUTE PREVIEW";
+  document.querySelector("#route-preview-title").textContent = route.name;
+  document.querySelector("#preview-distance").textContent = `${route.miles.toFixed(1)} mi`;
+  document.querySelector("#preview-elevation").textContent = `${route.elevation.toLocaleString()} ft`;
+  document.querySelector("#preview-score").textContent = route.score;
+  document.querySelector("#preview-reason").textContent = route.reason;
+  document.querySelector("#preview-note").textContent = route.exploring ? "Illustrative preview only. Live routing will show the exact streets, route surface and navigation-ready GPX." : "Illustrative preview only. Connect Strava to use your actual saved route geometry and activity history.";
+  const paths = ["M33 167 C72 113 111 191 147 118 S211 41 260 80 S306 164 327 54", "M33 167 C91 90 119 105 166 165 S259 196 302 120 S278 48 327 54", "M33 167 C72 207 112 184 157 100 S237 42 272 132 S304 95 327 54"];
+  document.querySelector("#preview-route-line").setAttribute("d", paths[index % paths.length]);
+  routePreviewDialog.showModal();
 }
 distance.addEventListener("input", () => { distanceOutput.textContent = `${distance.value} mi`; });
 document.querySelector("#ride-time").addEventListener("change", renderRoutes);
@@ -143,6 +160,11 @@ useLocationButton?.addEventListener("click", () => {
     useLocationButton.textContent = "Try location again";
   }, { enableHighAccuracy: false, timeout: 10000, maximumAge: 300000 });
 });
+routeList.addEventListener("click", event => { const card = event.target.closest(".route-card"); if (card) openRoutePreview(Number(card.dataset.routeIndex)); });
+routeList.addEventListener("keydown", event => { if ((event.key === "Enter" || event.key === " ") && event.target.closest(".route-card")) { event.preventDefault(); openRoutePreview(Number(event.target.closest(".route-card").dataset.routeIndex)); } });
+document.querySelector("#close-route-preview")?.addEventListener("click", () => routePreviewDialog?.close());
+document.querySelector("#preview-close-button")?.addEventListener("click", () => routePreviewDialog?.close());
+routePreviewDialog?.addEventListener("click", event => { if (event.target === routePreviewDialog) routePreviewDialog.close(); });
 settingsButton?.addEventListener("click", () => settingsDialog?.showModal());
 document.querySelector("#close-settings")?.addEventListener("click", () => settingsDialog?.close());
 connectStravaButton?.addEventListener("click", () => {
