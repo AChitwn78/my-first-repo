@@ -30,6 +30,9 @@ const stravaStatus = document.querySelector("#strava-status");
 const menus = document.querySelectorAll(".menu");
 let isStravaConnected = false;
 
+daySelect.innerHTML = weatherDays.map((day, index) => `<option value="${index}">${dayLabel(index)} · ${dayDate(index)}</option>`).join("");
+rideTimeSelect.innerHTML = weatherDays[0].hours.slice(1).map(item => `<option value="${item.hour}"${item.hour === 8 ? " selected" : ""}>${formatHour(item.hour)}</option>`).join("");
+
 function dayLabel(index) {
   const date = new Date(); date.setDate(date.getDate() + index + 1);
   return index === 0 ? "Tomorrow" : date.toLocaleDateString(undefined, { weekday: "long" });
@@ -97,9 +100,9 @@ function renderRoutes() {
 distance.addEventListener("input", () => { distanceOutput.textContent = `${distance.value} mi`; });
 document.querySelector("#ride-time").addEventListener("change", renderRoutes);
 daySelect.addEventListener("change", renderRoutes);
-settingsButton.addEventListener("click", () => settingsDialog.showModal());
-document.querySelector("#close-settings").addEventListener("click", () => settingsDialog.close());
-connectStravaButton.addEventListener("click", () => {
+settingsButton?.addEventListener("click", () => settingsDialog?.showModal());
+document.querySelector("#close-settings")?.addEventListener("click", () => settingsDialog?.close());
+connectStravaButton?.addEventListener("click", () => {
   if (isStravaConnected) {
     isStravaConnected = false;
     stravaStatus.textContent = "Not connected";
@@ -109,19 +112,17 @@ connectStravaButton.addEventListener("click", () => {
   stravaConsent.hidden = false;
   connectStravaButton.hidden = true;
 });
-document.querySelector("#cancel-connection").addEventListener("click", () => { stravaConsent.hidden = true; connectStravaButton.hidden = false; });
-document.querySelector("#complete-demo-connection").addEventListener("click", () => {
+document.querySelector("#cancel-connection")?.addEventListener("click", () => { stravaConsent.hidden = true; connectStravaButton.hidden = false; });
+document.querySelector("#complete-demo-connection")?.addEventListener("click", () => {
   isStravaConnected = true;
   stravaStatus.textContent = "Connected (demo)";
   connectStravaButton.textContent = "Disconnect";
   connectStravaButton.hidden = false;
   stravaConsent.hidden = true;
 });
-settingsDialog.addEventListener("click", event => { if (event.target === settingsDialog) settingsDialog.close(); });
+settingsDialog?.addEventListener("click", event => { if (event.target === settingsDialog) settingsDialog.close(); });
 form.addEventListener("submit", event => { event.preventDefault(); renderRoutes(); document.querySelector(".results").scrollIntoView({ behavior: "smooth", block: "start" }); });
 menus.forEach(menu => menu.addEventListener("toggle", () => { if (menu.open) menus.forEach(other => { if (other !== menu) other.open = false; }); }));
 document.addEventListener("click", event => { if (!event.target.closest(".menu")) menus.forEach(menu => { menu.open = false; }); });
-daySelect.innerHTML = weatherDays.map((day, index) => `<option value="${index}">${dayLabel(index)} · ${dayDate(index)}</option>`).join("");
-rideTimeSelect.innerHTML = weatherDays[0].hours.slice(1).map(item => `<option value="${item.hour}"${item.hour === 8 ? " selected" : ""}>${formatHour(item.hour)}</option>`).join("");
 if ("serviceWorker" in navigator) window.addEventListener("load", () => navigator.serviceWorker.register("service-worker.js"));
 renderRoutes();
