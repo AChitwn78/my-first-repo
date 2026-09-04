@@ -81,10 +81,31 @@
         <div class="method-stats"><span><strong id="route-count">4</strong> saved routes</span><span><strong id="rain-hours">0</strong> rain hours</span><span><strong id="day-high">76°</strong> high</span></div>
       </section>
     </main>
+    <dialog id="settings-dialog" class="settings-dialog" aria-labelledby="settings-title">
+      <div class="dialog-header">
+        <div><p class="eyebrow">SETTINGS</p><h2 id="settings-title">Your ride data</h2></div>
+        <button id="close-settings" class="icon-button" type="button" aria-label="Close settings">×</button>
+      </div>
+      <section class="connection-card">
+        <div class="connection-logo" aria-hidden="true">S</div>
+        <div><h3>Strava</h3><p id="strava-status">Not connected</p></div>
+        <button id="connect-strava" class="outline-button" type="button">Connect</button>
+      </section>
+      <p class="connection-note">Connect your Strava account to import cycling activities, discover familiar routes, and replace the demo data. You will sign in directly with Strava—Ridewise never sees your password.</p>
+      <section id="strava-consent" class="strava-consent" hidden>
+        <div class="strava-mark" aria-hidden="true">STRAVA</div>
+        <h3>Connect your Strava account</h3>
+        <p>Production Ridewise will open Strava's official consent screen and request permission to read your cycling activities and routes.</p>
+        <button id="complete-demo-connection" class="primary-button" type="button">Continue with Strava <span>→</span></button>
+        <button id="cancel-connection" class="text-button" type="button">Not now</button>
+        <p class="demo-copy">Demo only — no account or password is requested here.</p>
+      </section>
+    </dialog>
     <nav class="mobile-dock" aria-label="Quick navigation">
       <a href="#top"><span aria-hidden="true">⌂</span>Plan</a>
       <a href="#forecast"><span aria-hidden="true">☀</span>Weather</a>
       <a href="#recommendations"><span aria-hidden="true">◎</span>Routes</a>
+      <button id="settings-button" type="button" aria-label="Open settings"><span aria-hidden="true">⚙</span>Settings</button>
       <button id="install-button" type="button" hidden><span aria-hidden="true">＋</span>Install</button>
     </nav>
     <script src="script.js"></script>

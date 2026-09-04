@@ -22,9 +22,15 @@ const hourlyForecastElement = document.querySelector("#hourly-forecast");
 const daySelect = document.querySelector("#ride-day");
 const rideTimeSelect = document.querySelector("#ride-time");
 const warning = document.querySelector("#ride-warning");
+const settingsDialog = document.querySelector("#settings-dialog");
+const settingsButton = document.querySelector("#settings-button");
+const connectStravaButton = document.querySelector("#connect-strava");
+const stravaConsent = document.querySelector("#strava-consent");
+const stravaStatus = document.querySelector("#strava-status");
 const menus = document.querySelectorAll(".menu");
 const installButton = document.querySelector("#install-button");
 let installPrompt;
+let isStravaConnected = false;
 
 function dayLabel(index) {
   const date = new Date(); date.setDate(date.getDate() + index + 1);
@@ -90,6 +96,27 @@ function renderRoutes() {
 distance.addEventListener("input", () => { distanceOutput.textContent = `${distance.value} mi`; });
 document.querySelector("#ride-time").addEventListener("change", renderRoutes);
 daySelect.addEventListener("change", renderRoutes);
+settingsButton.addEventListener("click", () => settingsDialog.showModal());
+document.querySelector("#close-settings").addEventListener("click", () => settingsDialog.close());
+connectStravaButton.addEventListener("click", () => {
+  if (isStravaConnected) {
+    isStravaConnected = false;
+    stravaStatus.textContent = "Not connected";
+    connectStravaButton.textContent = "Connect";
+    return;
+  }
+  stravaConsent.hidden = false;
+  connectStravaButton.hidden = true;
+});
+document.querySelector("#cancel-connection").addEventListener("click", () => { stravaConsent.hidden = true; connectStravaButton.hidden = false; });
+document.querySelector("#complete-demo-connection").addEventListener("click", () => {
+  isStravaConnected = true;
+  stravaStatus.textContent = "Connected (demo)";
+  connectStravaButton.textContent = "Disconnect";
+  connectStravaButton.hidden = false;
+  stravaConsent.hidden = true;
+});
+settingsDialog.addEventListener("click", event => { if (event.target === settingsDialog) settingsDialog.close(); });
 form.addEventListener("submit", event => { event.preventDefault(); renderRoutes(); document.querySelector(".results").scrollIntoView({ behavior: "smooth", block: "start" }); });
 menus.forEach(menu => menu.addEventListener("toggle", () => { if (menu.open) menus.forEach(other => { if (other !== menu) other.open = false; }); }));
 document.addEventListener("click", event => { if (!event.target.closest(".menu")) menus.forEach(menu => { menu.open = false; }); });
