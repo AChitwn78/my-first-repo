@@ -30,7 +30,7 @@
           <p class="eyebrow">YOUR PERSONAL RIDE ADVISOR</p>
           <h1>Make the weather<br />work for you.</h1>
           <div class="intro-with-qr">
-            <p class="intro">Choose a ride window and we'll rank your familiar routes by wind, distance, elevation, and conditions.</p>
+            <p class="intro">Choose a ride window, then rank your familiar routes or explore wind-aware routes from where you are.</p>
             <a class="qr-card" href="https://achitwn78.github.io/my-first-repo/" aria-label="Open Ridewise™">
               <img src="qr-code.svg" alt="QR code linking to Ridewise™" />
               <span>Scan to open</span>
@@ -41,6 +41,15 @@
 
         <form id="ride-form" class="ride-form">
           <div class="form-heading"><h2 id="planner-title">Plan tomorrow's ride</h2><span class="demo-badge">DEMO DATA</span></div>
+          <fieldset class="planning-mode">
+            <legend>Route source</legend>
+            <div class="mode-options">
+              <label><input type="radio" name="route-mode" value="saved" checked /><span>My routes</span></label>
+              <label><input type="radio" name="route-mode" value="explore" /><span>Explore nearby</span></label>
+            </div>
+            <p id="explore-location" class="location-status" hidden>Using a sample location near you.</p>
+            <button id="use-location" class="location-button" type="button" hidden>Use my current location</button>
+          </fieldset>
           <label>How far do you want to ride?
             <span class="range-row"><input id="distance" type="range" min="25" max="80" value="50" step="1" /><output id="distance-output">50 mi</output></span>
           </label>
@@ -66,7 +75,7 @@
           <label>Wind preference
             <select id="wind-preference"><option value="headwind-early" selected>Headwind early, tailwind home</option><option value="tailwind-early">Tailwind early</option><option value="least-wind">Least wind exposure</option></select>
           </label>
-          <button class="primary-button" type="submit">Find my ride <span>→</span></button>
+          <button id="find-ride-button" class="primary-button" type="submit">Find my ride <span>→</span></button>
         </form>
       </section>
 
@@ -85,14 +94,14 @@
       </section>
 
       <section id="recommendations" class="results" aria-live="polite">
-        <div class="section-heading"><div><p class="eyebrow">RECOMMENDATIONS</p><h2 id="recommendations-title">Your best routes for tomorrow</h2></div><p id="conditions-summary" class="conditions-summary">SSW 11 mph at 8 AM</p></div>
+        <div class="section-heading"><div><p id="recommendations-eyebrow" class="eyebrow">RECOMMENDATIONS</p><h2 id="recommendations-title">Your best routes for tomorrow</h2></div><p id="conditions-summary" class="conditions-summary">SSW 11 mph at 8 AM</p></div>
         <div id="route-list" class="route-list"></div>
       </section>
 
       <section class="method">
-        <div><p class="eyebrow">WHY THIS ROUTE?</p><h2>Real route geometry,<br />not guesswork.</h2></div>
-        <p>Each route is divided into small GPS segments. The planner compares the direction of every segment with the expected wind at the time you'll reach it—so “headwind out, tailwind home” is based on the road beneath your wheels.</p>
-        <div class="method-stats"><span><strong id="route-count">4</strong> saved routes</span><span><strong id="rain-hours">0</strong> rain hours</span><span><strong id="day-high">76°</strong> high</span></div>
+        <div><p class="eyebrow">WHY THIS ROUTE?</p><h2 id="method-title">Real route geometry,<br />not guesswork.</h2></div>
+        <p id="method-copy">Each route is divided into small GPS segments. The planner compares the direction of every segment with the expected wind at the time you'll reach it—so “headwind out, tailwind home” is based on the road beneath your wheels.</p>
+        <div class="method-stats"><span><strong id="route-count">4</strong> <span id="route-count-label">saved routes</span></span><span><strong id="rain-hours">0</strong> rain hours</span><span><strong id="day-high">76°</strong> high</span></div>
       </section>
     </main>
     <dialog id="settings-dialog" class="settings-dialog" aria-labelledby="settings-title">

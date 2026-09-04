@@ -28,7 +28,12 @@ const connectStravaButton = document.querySelector("#connect-strava");
 const stravaConsent = document.querySelector("#strava-consent");
 const stravaStatus = document.querySelector("#strava-status");
 const menus = document.querySelectorAll(".menu");
+const routeModeInputs = document.querySelectorAll('input[name="route-mode"]');
+const useLocationButton = document.querySelector("#use-location");
+const locationStatus = document.querySelector("#explore-location");
+const findRideButton = document.querySelector("#find-ride-button");
 let isStravaConnected = false;
+let currentLocation = null;
 
 daySelect.innerHTML = weatherDays.map((day, index) => `<option value="${index}">${dayLabel(index)} · ${dayDate(index)}</option>`).join("");
 rideTimeSelect.innerHTML = weatherDays[0].hours.slice(1).map(item => `<option value="${item.hour}"${item.hour === 8 ? " selected" : ""}>${formatHour(item.hour)}</option>`).join("");
@@ -42,6 +47,7 @@ function dayDate(index) {
   return date.toLocaleDateString(undefined, { month: "short", day: "numeric" });
 }
 function selectedDay() { return weatherDays[Number(daySelect.value)]; }
+function routeMode() { return document.querySelector('input[name="route-mode"]:checked').value; }
 function windForHour(hour, day = selectedDay()) {
   const forecast = day.hours.find(item => item.hour === hour) || day.hours[2];
   return { from: forecast.direction === "SW" ? 225 : 205, speed: forecast.speed, label: forecast.direction, gusts: forecast.gusts, temp: forecast.temp, precipitation: forecast.precipitation };
@@ -89,17 +95,54 @@ function routeReason(route, preference, weather) {
   const favorable = preference === "headwind-early" ? headwind > 0 : headwind < 0;
   return favorable ? "Wind works in your preferred direction; the return reverses it." : "Strong distance match, with a less favorable wind angle.";
 }
+function exploredRoutes(desiredMiles) {
+  const place = currentLocation ? "from your location" : "near your location";
+  return [
+    { name: "Southwest Wind Loop", miles: desiredMiles + .8, elevation: Math.round(desiredMiles * 19), outboundHeading: 205, origin: `Generated ${place}`, detail: "Loop · cycling-friendly roads" },
+    { name: "Riverside Out & Back", miles: Math.max(25, desiredMiles - 1.6), elevation: Math.round(desiredMiles * 13), outboundHeading: 42, origin: `Generated ${place}`, detail: "Out & back · lower climbing" },
+    { name: "Rolling Country Circuit", miles: desiredMiles + 2.4, elevation: Math.round(desiredMiles * 25), outboundHeading: 310, origin: `Generated ${place}`, detail: "Loop · more climbing" },
+  ];
+}
+function renderRouteMode() {
+  const exploring = routeMode() === "explore";
+  useLocationButton.hidden = !exploring;
+  locationStatus.hidden = !exploring;
+  if (exploring && !currentLocation) locationStatus.textContent = "Choose your location to start routes near you. Demo routes are shown until routing is connected.";
+  findRideButton.childNodes[0].textContent = exploring ? "Explore routes " : "Find my ride ";
+}
 function renderRoutes() {
   const desiredMiles = Number(distance.value); const hour = Number(document.querySelector("#ride-time").value); const preference = document.querySelector("#wind-preference").value; const rideType = document.querySelector("#ride-type").value; const day = selectedDay(); const weather = windForHour(hour, day);
-  const sorted = routes.map(route => ({ ...route, score: scoreRoute(route, desiredMiles, preference, rideType, weather) })).sort((a, b) => b.score - a.score);
+  const exploring = routeMode() === "explore";
+  const baseRoutes = exploring ? exploredRoutes(desiredMiles) : routes;
+  const sorted = baseRoutes.map(route => ({ ...route, score: scoreRoute(route, desiredMiles, preference, rideType, weather) })).sort((a, b) => b.score - a.score);
   conditionsSummary.textContent = `${weather.label} ${weather.speed} mph at ${hour}:00 AM`;
   renderHourlyForecast(hour, day);
   renderDayDetails(day, hour);
-  routeList.innerHTML = sorted.map((route, index) => `<article class="route-card"><div class="rank">${["🥇", "🥈", "🥉", "4"][index]}</div><div><h3 class="route-name">${route.name}</h3><p class="route-meta">${route.miles.toFixed(1)} mi · ${route.elevation.toLocaleString()} ft · ridden ${route.rides} times</p></div><p class="route-reason">${routeReason(route, preference, weather)}</p><div class="score"><strong>${route.score}</strong><span>wind score</span></div></article>`).join("");
+  document.querySelector("#recommendations-eyebrow").textContent = exploring ? "EXPLORE ROUTES · DEMO" : "RECOMMENDATIONS";
+  document.querySelector("#recommendations-title").textContent = exploring ? `Wind-aware routes for ${dayLabel(day.dayIndex)}` : `Your best routes for ${dayLabel(day.dayIndex)}`;
+  document.querySelector("#route-count").textContent = exploring ? "3" : routes.length;
+  document.querySelector("#route-count-label").textContent = exploring ? "route ideas" : "saved routes";
+  document.querySelector("#method-title").innerHTML = exploring ? "Routes built around<br />your ride window." : "Real route geometry,<br />not guesswork.";
+  document.querySelector("#method-copy").textContent = exploring ? "This prototype creates route concepts from your chosen distance and wind preference. Production Ridewise™ will request routes from a cycling-aware map service, check road access and elevation, then return usable map geometry and GPX export." : "Each route is divided into small GPS segments. The planner compares the direction of every segment with the expected wind at the time you'll reach it—so “headwind out, tailwind home” is based on the road beneath your wheels.";
+  routeList.innerHTML = sorted.map((route, index) => `<article class="route-card"><div class="rank">${["🥇", "🥈", "🥉", "4"][index]}</div><div><h3 class="route-name">${route.name}</h3><p class="route-meta">${route.miles.toFixed(1)} mi · ${route.elevation.toLocaleString()} ft · ${exploring ? route.detail : `ridden ${route.rides} times`}</p>${exploring ? `<span class="route-origin">${route.origin}</span>` : ""}</div><p class="route-reason">${routeReason(route, preference, weather)}</p><div class="score"><strong>${route.score}</strong><span>wind score</span></div></article>`).join("");
 }
 distance.addEventListener("input", () => { distanceOutput.textContent = `${distance.value} mi`; });
 document.querySelector("#ride-time").addEventListener("change", renderRoutes);
 daySelect.addEventListener("change", renderRoutes);
+routeModeInputs.forEach(input => input.addEventListener("change", () => { renderRouteMode(); renderRoutes(); }));
+useLocationButton?.addEventListener("click", () => {
+  if (!navigator.geolocation) { locationStatus.textContent = "Location is not available in this browser. Demo routes will remain near a sample location."; return; }
+  useLocationButton.textContent = "Finding your location…";
+  navigator.geolocation.getCurrentPosition(position => {
+    currentLocation = { latitude: position.coords.latitude, longitude: position.coords.longitude };
+    locationStatus.textContent = `Location ready (${currentLocation.latitude.toFixed(3)}, ${currentLocation.longitude.toFixed(3)}). Routes will start here when live routing is connected.`;
+    useLocationButton.textContent = "Location updated";
+    renderRoutes();
+  }, () => {
+    locationStatus.textContent = "We couldn't access your location. You can still review the sample route ideas.";
+    useLocationButton.textContent = "Try location again";
+  }, { enableHighAccuracy: false, timeout: 10000, maximumAge: 300000 });
+});
 settingsButton?.addEventListener("click", () => settingsDialog?.showModal());
 document.querySelector("#close-settings")?.addEventListener("click", () => settingsDialog?.close());
 connectStravaButton?.addEventListener("click", () => {
@@ -125,4 +168,5 @@ form.addEventListener("submit", event => { event.preventDefault(); renderRoutes(
 menus.forEach(menu => menu.addEventListener("toggle", () => { if (menu.open) menus.forEach(other => { if (other !== menu) other.open = false; }); }));
 document.addEventListener("click", event => { if (!event.target.closest(".menu")) menus.forEach(menu => { menu.open = false; }); });
 if ("serviceWorker" in navigator) window.addEventListener("load", () => navigator.serviceWorker.register("service-worker.js"));
+renderRouteMode();
 renderRoutes();
