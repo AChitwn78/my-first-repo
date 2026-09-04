@@ -140,8 +140,8 @@ function renderRoutes() {
   document.querySelector("#recommendations-title").textContent = exploring ? `Wind-aware routes for ${dayLabel(day.dayIndex)}` : `Your best routes for ${dayLabel(day.dayIndex)}`;
   document.querySelector("#route-count").textContent = exploring ? "3" : savedRoutes.length;
   document.querySelector("#route-count-label").textContent = exploring ? "route ideas" : importedRoutes.length ? "imported routes" : "saved routes";
-  document.querySelector("#method-title").innerHTML = exploring ? "Routes built around<br />your ride window." : "Real route geometry,<br />not guesswork.";
-  document.querySelector("#method-copy").textContent = exploring ? "This prototype creates route concepts from your chosen distance and wind preference. Production Ridewise™ will request routes from a cycling-aware map service, check road access and elevation, then return usable map geometry and GPX export." : "Each route is divided into small GPS segments. The planner compares the direction of every segment with the expected wind at the time you'll reach it—so “headwind out, tailwind home” is based on the road beneath your wheels.";
+  document.querySelector("#method-title").innerHTML = exploring ? "Routes built around<br />your ride window." : importedRoutes.length ? "Your GPS tracks,<br />ranked by weather." : "Real route geometry,<br />not guesswork.";
+  document.querySelector("#method-copy").textContent = exploring ? "This prototype creates route concepts from your chosen distance and wind preference. Production Ridewise™ will request routes from a cycling-aware map service, check road access and elevation, then return usable map geometry and GPX export." : importedRoutes.length ? "Ridewise keeps a simplified copy of each imported GPS track on this device, then compares its direction with your selected forecast and wind preference." : "Each route is divided into small GPS segments. The planner compares the direction of every segment with the expected wind at the time you'll reach it—so “headwind out, tailwind home” is based on the road beneath your wheels.";
   const visibleRoutes = sorted.slice(0, exploring ? 3 : importedRoutes.length ? 12 : 4);
   displayedRoutes = visibleRoutes.map(route => ({ ...route, reason: routeReason(route, preference, weather), exploring }));
   routeList.innerHTML = displayedRoutes.map((route, index) => `<article class="route-card" data-route-index="${index}" role="button" tabindex="0" aria-label="Preview ${route.name}"><div class="rank">${["🥇", "🥈", "🥉", "4"][index]}</div><div><h3 class="route-name">${route.name}</h3><p class="route-meta">${route.miles.toFixed(1)} mi · ${route.elevation.toLocaleString()} ft · ${exploring ? route.detail : `ridden ${route.rides} times`}</p>${exploring ? `<span class="route-origin">${route.origin}</span>` : route.imported ? `<span class="route-origin">Imported from Strava export</span>` : ""}</div><p class="route-reason">${route.reason}</p><div class="score"><strong>${route.score}</strong><span>ride match</span></div></article>`).join("");
@@ -155,13 +155,36 @@ function openRoutePreview(index) {
   document.querySelector("#preview-elevation").textContent = `${route.elevation.toLocaleString()} ft`;
   document.querySelector("#preview-score").textContent = route.score;
   document.querySelector("#preview-reason").textContent = route.reason;
-  document.querySelector("#preview-note").textContent = route.exploring ? "Illustrative preview only. Live routing will show the exact streets, route surface and navigation-ready GPX." : route.imported ? "Your real activity summary was imported locally. This map line remains illustrative because Ridewise stores only the route summary, not your raw GPS track." : "Illustrative preview only. Connect Strava to use your actual saved route geometry and activity history.";
+  const realGeometry = route.imported && Array.isArray(route.path) && route.path.length > 1;
+  const demoBadge = document.querySelector("#preview-demo-badge");
+  demoBadge.hidden = realGeometry;
+  document.querySelector("#preview-note").textContent = route.exploring ? "Illustrative preview only. Live routing will show the exact streets, route surface and navigation-ready GPX." : realGeometry ? "This is a simplified shape of your imported GPS track, stored only on this device. It is not uploaded by Ridewise." : route.imported ? "This activity was imported before GPS previews were enabled. Import the archive again to add its real route shape." : "Illustrative preview only. Connect Strava to use your actual saved route geometry and activity history.";
   const exportStatus = document.querySelector("#garmin-export-status");
   exportStatus.hidden = true;
   exportStatus.textContent = "";
   const paths = ["M33 167 C72 113 111 191 147 118 S211 41 260 80 S306 164 327 54", "M33 167 C91 90 119 105 166 165 S259 196 302 120 S278 48 327 54", "M33 167 C72 207 112 184 157 100 S237 42 272 132 S304 95 327 54"];
-  document.querySelector("#preview-route-line").setAttribute("d", paths[index % paths.length]);
+  const geometry = realGeometry ? previewGeometry(route.path) : null;
+  document.querySelector("#preview-route-line").setAttribute("d", geometry?.d || paths[index % paths.length]);
+  setPreviewMarker("#preview-start-dot", "#preview-start-label", geometry?.start, { x: 33, y: 167 });
+  setPreviewMarker("#preview-finish-dot", "#preview-finish-label", geometry?.finish, { x: 327, y: 54 });
   routePreviewDialog.showModal();
+}
+function previewGeometry(points) {
+  const latitude = points.reduce((total, point) => total + point.lat, 0) / points.length;
+  const projected = points.map(point => ({ x: point.lon * Math.cos(latitude * Math.PI / 180), y: point.lat }));
+  const xValues = projected.map(point => point.x); const yValues = projected.map(point => point.y);
+  const minX = Math.min(...xValues); const maxX = Math.max(...xValues); const minY = Math.min(...yValues); const maxY = Math.max(...yValues);
+  const scale = Math.min(304 / Math.max(maxX - minX, .00001), 164 / Math.max(maxY - minY, .00001));
+  const offsetX = 180 - ((minX + maxX) / 2) * scale; const offsetY = 110 + ((minY + maxY) / 2) * scale;
+  const transformed = projected.map(point => ({ x: point.x * scale + offsetX, y: offsetY - point.y * scale }));
+  return { d: transformed.map((point, itemIndex) => `${itemIndex ? "L" : "M"}${point.x.toFixed(1)} ${point.y.toFixed(1)}`).join(" "), start: transformed[0], finish: transformed.at(-1) };
+}
+function setPreviewMarker(dotSelector, labelSelector, position, fallback) {
+  const point = position || fallback; const dot = document.querySelector(dotSelector); const label = document.querySelector(labelSelector);
+  dot.setAttribute("cx", point.x); dot.setAttribute("cy", point.y);
+  label.style.left = `${Math.min(86, Math.max(2, point.x / 3.6 - 6))}%`;
+  label.style.top = `${Math.min(86, Math.max(2, point.y / 2.2 + 4))}%`;
+  label.style.right = "auto"; label.style.bottom = "auto";
 }
 function parseCsv(text) {
   const rows = []; let row = []; let field = ""; let quoted = false;
@@ -201,7 +224,9 @@ function summarizeGpx(text, metadata, filename) {
   if (miles < 3 || miles > 250) return null;
   let headingPoint = points[1]; let headingDistance = 0;
   for (let index = 1; index < points.length && headingDistance < .06; index += 1) { headingDistance += haversineMiles(points[index - 1], points[index]); headingPoint = points[index]; }
-  return { name: metadata?.name || `Imported ride ${filename.replace(/\.[^.]+$/, "")}`, miles, elevation: Math.round(climbingMeters * 3.28084), outboundHeading: bearing(points[0], headingPoint), rides: 1, imported: true };
+  const sampleSize = 96; const path = points.filter((_, index) => index % Math.max(1, Math.ceil(points.length / sampleSize)) === 0).map(point => ({ lat: Number(point.lat.toFixed(5)), lon: Number(point.lon.toFixed(5)) }));
+  if (path.at(-1)?.lat !== points.at(-1).lat || path.at(-1)?.lon !== points.at(-1).lon) path.push({ lat: Number(points.at(-1).lat.toFixed(5)), lon: Number(points.at(-1).lon.toFixed(5)) });
+  return { name: metadata?.name || `Imported ride ${filename.replace(/\.[^.]+$/, "")}`, miles, elevation: Math.round(climbingMeters * 3.28084), outboundHeading: bearing(points[0], headingPoint), path, rides: 1, imported: true };
 }
 async function importActivityFolder(files, onProgress = () => {}) {
   const filesToImport = Array.from(files); const activityCsv = filesToImport.find(file => file.name === "activities.csv");
