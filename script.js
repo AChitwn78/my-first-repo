@@ -69,7 +69,7 @@ function renderDayDetails(day, hour) {
   if (weather.temp <= 45 || weather.temp >= 90) warnings.push(`The expected ${weather.temp}° departure temperature may be uncomfortable.`);
   if (upcomingStorm) warnings.push(`Thunderstorms are possible around ${formatHour(upcomingStorm.hour)} during your ride.`);
   warning.hidden = warnings.length === 0;
-  document.querySelector("#warning-title").textContent = warnings.length ? "Why riding conditions need attention" : "";
+  document.querySelector("#warning-title").textContent = warnings.length ? "Riding conditions need attention:" : "";
   document.querySelector("#warning-copy").textContent = warnings.length ? warnings.join(" ") : "";
 }
 function windComponent(routeHeading, windFrom, speed) { return Math.cos((routeHeading - windFrom) * Math.PI / 180) * speed; }

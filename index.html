@@ -38,18 +38,18 @@
           <label>How far do you want to ride?
             <span class="range-row"><input id="distance" type="range" min="25" max="80" value="50" step="1" /><output id="distance-output">50 mi</output></span>
           </label>
+          <label>Start day
+            <select id="ride-day" aria-label="Start day">
+              <option value="0">Tomorrow</option>
+              <option value="1">In 2 days</option>
+              <option value="2">In 3 days</option>
+              <option value="3">In 4 days</option>
+              <option value="4">In 5 days</option>
+              <option value="5">In 6 days</option>
+              <option value="6">In 7 days</option>
+            </select>
+          </label>
           <div class="two-columns">
-            <label>Start day
-              <select id="ride-day" aria-label="Start day">
-                <option value="0">Tomorrow</option>
-                <option value="1">In 2 days</option>
-                <option value="2">In 3 days</option>
-                <option value="3">In 4 days</option>
-                <option value="4">In 5 days</option>
-                <option value="5">In 6 days</option>
-                <option value="6">In 7 days</option>
-              </select>
-            </label>
             <label>Start time
               <select id="ride-time"><option value="7">7:00 AM</option><option value="8" selected>8:00 AM</option><option value="9">9:00 AM</option><option value="10">10:00 AM</option></select>
             </label>
@@ -66,7 +66,7 @@
 
       <section id="ride-warning" class="ride-warning" hidden aria-live="polite">
         <span class="warning-icon" aria-hidden="true">!</span>
-        <div><p id="warning-title">Riding conditions need attention</p><p id="warning-copy"></p></div>
+        <div><p id="warning-title">Riding conditions need attention:</p><p id="warning-copy"></p></div>
       </section>
 
       <section id="forecast" class="forecast-detail" aria-labelledby="forecast-title">
