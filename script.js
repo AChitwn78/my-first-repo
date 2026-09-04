@@ -39,6 +39,9 @@ const routePreviewDialog = document.querySelector("#route-preview-dialog");
 const activityFolderInput = document.querySelector("#activity-folder-input");
 const activityZipInput = document.querySelector("#activity-zip-input");
 const importStatus = document.querySelector("#import-status");
+const sampleRoutesStatus = document.querySelector("#sample-routes-status");
+const loadSampleRoutesButton = document.querySelector("#load-sample-routes");
+const SAMPLE_ARCHIVE_URL = "https://drive.usercontent.google.com/download?id=1e9Z5qjUv_es1ydBR7rQUYa9tIFzgpifE&export=download&confirm=t";
 let isStravaConnected = false;
 let isGarminConnected = false;
 let currentLocation = null;
@@ -259,22 +262,37 @@ async function importActivityZip(file, onProgress = () => {}) {
   }));
   return importActivityFolder(files, onProgress);
 }
-async function processActivityImport(importer) {
-  importStatus.dataset.state = "";
-  importStatus.textContent = "Reading your activity archive locally…";
+async function processActivityImport(importer, statusElement = importStatus, sourceName = "your Strava export") {
+  statusElement.dataset.state = "";
+  statusElement.textContent = "Reading your activity archive locally…";
   try {
     importedRoutes = await importer((completed, total) => {
-      importStatus.textContent = `Reading activity ${completed} of ${total} locally…`;
+      statusElement.textContent = `Reading activity ${completed} of ${total} locally…`;
     });
     if (!importedRoutes.length) throw new Error("No cycling GPX tracks were found in that archive.");
     saveImportedRoutes(importedRoutes);
-    importStatus.dataset.state = "success";
-    importStatus.textContent = `Imported ${importedRoutes.length} route patterns from your Strava export. Demo routes have been replaced.`;
+    statusElement.dataset.state = "success";
+    statusElement.textContent = `Imported ${importedRoutes.length} route patterns from ${sourceName}. Demo routes have been replaced.`;
     renderRoutes();
   } catch (error) {
-    importStatus.dataset.state = "error";
-    importStatus.textContent = error.message || "The import could not be completed.";
+    statusElement.dataset.state = "error";
+    statusElement.textContent = error.message || "The import could not be completed.";
   }
+}
+async function downloadSampleArchive() {
+  if (!window.JSZip) throw new Error("ZIP support could not load. Check your connection, then try again.");
+  const response = await fetch(SAMPLE_ARCHIVE_URL);
+  if (!response.ok) throw new Error("The public sample archive could not be downloaded.");
+  const size = Number(response.headers.get("content-length"));
+  if (!response.body) return response.blob();
+  const reader = response.body.getReader(); const chunks = []; let received = 0;
+  while (true) {
+    const { done, value } = await reader.read();
+    if (done) break;
+    chunks.push(value); received += value.length;
+    sampleRoutesStatus.textContent = size ? `Downloading public sample routes… ${Math.round(received / size * 100)}%` : "Downloading public sample routes…";
+  }
+  return new Blob(chunks, { type: "application/zip" });
 }
 distance.addEventListener("input", () => { distanceOutput.textContent = `${distance.value} mi`; });
 document.querySelector("#ride-time").addEventListener("change", renderRoutes);
@@ -294,6 +312,16 @@ activityZipInput?.addEventListener("change", async event => {
   const selectedFile = event.target.files?.[0];
   if (selectedFile) await processActivityImport(onProgress => importActivityZip(selectedFile, onProgress));
   event.target.value = "";
+});
+loadSampleRoutesButton?.addEventListener("click", async () => {
+  loadSampleRoutesButton.disabled = true;
+  sampleRoutesStatus.dataset.state = "";
+  sampleRoutesStatus.textContent = "Downloading public sample routes…";
+  try {
+    await processActivityImport(async onProgress => importActivityZip(await downloadSampleArchive(), onProgress), sampleRoutesStatus, "the public Ridewise archive");
+  } finally {
+    loadSampleRoutesButton.disabled = false;
+  }
 });
 useLocationButton?.addEventListener("click", () => {
   if (!navigator.geolocation) { locationStatus.textContent = "Location is not available in this browser. Demo routes will remain near a sample location."; return; }
