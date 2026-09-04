@@ -30,7 +30,7 @@
           <p class="eyebrow">YOUR PERSONAL RIDE ADVISOR</p>
           <h1>Make the weather<br />work for you.</h1>
           <p class="intro">Choose a ride window and we'll rank your familiar routes by wind, distance, elevation, and conditions.</p>
-          <div class="forecast-pill"><span class="sun">☀</span><span><strong>Tomorrow looks good.</strong> 61–76°F · dry until evening</span></div>
+          <div class="forecast-pill"><span id="hero-weather-icon" class="sun">☀</span><span><strong id="hero-weather-title">Tomorrow looks good.</strong> <span id="hero-weather-summary">61–76°F · dry until evening</span></span></div>
         </div>
 
         <form id="ride-form" class="ride-form">
@@ -39,6 +39,9 @@
             <span class="range-row"><input id="distance" type="range" min="25" max="80" value="50" step="1" /><output id="distance-output">50 mi</output></span>
           </label>
           <div class="two-columns">
+            <label>Start day
+              <select id="ride-day" aria-label="Start day"></select>
+            </label>
             <label>When?
               <select id="ride-time"><option value="7">Tomorrow · 7:00 AM</option><option value="8" selected>Tomorrow · 8:00 AM</option><option value="9">Tomorrow · 9:00 AM</option><option value="10">Tomorrow · 10:00 AM</option></select>
             </label>
@@ -53,9 +56,14 @@
         </form>
       </section>
 
+      <section id="ride-warning" class="ride-warning" hidden aria-live="polite">
+        <span class="warning-icon" aria-hidden="true">!</span>
+        <div><p id="warning-title">Riding conditions need attention</p><p id="warning-copy"></p></div>
+      </section>
+
       <section id="forecast" class="forecast-detail" aria-labelledby="forecast-title">
         <div class="section-heading">
-          <div><p class="eyebrow">TOMORROW'S FORECAST</p><h2 id="forecast-title">Plan your window</h2></div>
+          <div><p id="forecast-eyebrow" class="eyebrow">TOMORROW'S FORECAST</p><h2 id="forecast-title">Plan your window</h2></div>
           <p class="conditions-summary"><span class="demo-badge">DEMO DATA</span> Hourly conditions</p>
         </div>
         <p class="forecast-description">The highlighted hour matches your planned departure. Wind speeds are sustained; gusts are shown separately.</p>
@@ -63,14 +71,14 @@
       </section>
 
       <section id="recommendations" class="results" aria-live="polite">
-        <div class="section-heading"><div><p class="eyebrow">RECOMMENDATIONS</p><h2>Your best routes for tomorrow</h2></div><p id="conditions-summary" class="conditions-summary">SSW 11 mph at 8 AM</p></div>
+        <div class="section-heading"><div><p class="eyebrow">RECOMMENDATIONS</p><h2 id="recommendations-title">Your best routes for tomorrow</h2></div><p id="conditions-summary" class="conditions-summary">SSW 11 mph at 8 AM</p></div>
         <div id="route-list" class="route-list"></div>
       </section>
 
       <section class="method">
         <div><p class="eyebrow">WHY THIS ROUTE?</p><h2>Real route geometry,<br />not guesswork.</h2></div>
         <p>Each route is divided into small GPS segments. The planner compares the direction of every segment with the expected wind at the time you'll reach it—so “headwind out, tailwind home” is based on the road beneath your wheels.</p>
-        <div class="method-stats"><span><strong id="route-count">4</strong> saved routes</span><span><strong>0</strong> rain hours</span><span><strong>76°</strong> high</span></div>
+        <div class="method-stats"><span><strong id="route-count">4</strong> saved routes</span><span><strong id="rain-hours">0</strong> rain hours</span><span><strong id="day-high">76°</strong> high</span></div>
       </section>
     </main>
     <nav class="mobile-dock" aria-label="Quick navigation">

@@ -4,31 +4,61 @@ const routes = [
   { name: "Plainfield West", miles: 46.4, elevation: 510, outboundHeading: 264, rides: 31 },
   { name: "Batavia Rollers", miles: 52.3, elevation: 1240, outboundHeading: 315, rides: 18 },
 ];
-const hourlyForecast = [
-  { hour: 6, temp: 61, precipitation: 2, direction: "SSW", speed: 8, gusts: 13, condition: "Clear", icon: "☀" },
-  { hour: 7, temp: 64, precipitation: 1, direction: "SSW", speed: 10, gusts: 16, condition: "Sunny", icon: "☀" },
-  { hour: 8, temp: 67, precipitation: 1, direction: "SSW", speed: 11, gusts: 18, condition: "Sunny", icon: "☀" },
-  { hour: 9, temp: 70, precipitation: 2, direction: "SSW", speed: 13, gusts: 21, condition: "Mostly sunny", icon: "🌤" },
-  { hour: 10, temp: 72, precipitation: 3, direction: "SW", speed: 14, gusts: 23, condition: "Partly cloudy", icon: "⛅" },
-  { hour: 11, temp: 75, precipitation: 5, direction: "SW", speed: 16, gusts: 26, condition: "Partly cloudy", icon: "⛅" },
-];
+const weatherDays = [
+  { summary: "61–76°F · dry until evening", icon: "☀", title: "Tomorrow looks good.", hours: [[61,2,"SSW",8,13,"Clear","☀"],[64,1,"SSW",10,16,"Sunny","☀"],[67,1,"SSW",11,18,"Sunny","☀"],[70,2,"SSW",13,21,"Mostly sunny","🌤"],[72,3,"SW",14,23,"Partly cloudy","⛅"],[75,5,"SW",16,26,"Partly cloudy","⛅"]] },
+  { summary: "58–65°F · steady rain in the morning", icon: "🌧", title: "Rain is likely.", hours: [[58,72,"E",13,21,"Rain","🌧"],[59,78,"E",14,24,"Rain","🌧"],[61,74,"ENE",15,25,"Rain","🌧"],[63,61,"ENE",16,27,"Showers","🌦"],[64,47,"NE",14,23,"Showers","🌦"],[65,35,"NE",12,19,"Cloudy","☁"]] },
+  { summary: "55–69°F · breezy but dry", icon: "🌤", title: "A breezy ride day.", hours: [[55,3,"NW",14,24,"Clear","☀"],[58,2,"NW",16,27,"Sunny","☀"],[61,2,"NW",18,31,"Sunny","☀"],[64,3,"NW",19,33,"Sunny","☀"],[67,4,"WNW",20,35,"Mostly sunny","🌤"],[69,5,"WNW",19,34,"Partly cloudy","⛅"]] },
+  { summary: "60–73°F · mild with low rain risk", icon: "⛅", title: "A comfortable ride day.", hours: [[60,5,"W",6,10,"Mostly clear","🌤"],[62,6,"W",7,11,"Partly cloudy","⛅"],[65,8,"WSW",8,13,"Partly cloudy","⛅"],[68,10,"WSW",9,15,"Cloudy","☁"],[71,12,"SW",10,16,"Cloudy","☁"],[73,14,"SW",11,18,"Cloudy","☁"]] },
+  { summary: "67–82°F · warm and clear", icon: "☀", title: "A great ride day.", hours: [[67,1,"S",5,9,"Clear","☀"],[70,1,"S",6,10,"Sunny","☀"],[73,2,"SSW",7,12,"Sunny","☀"],[77,2,"SSW",8,14,"Sunny","☀"],[80,3,"SW",9,15,"Sunny","☀"],[82,4,"SW",10,17,"Mostly sunny","🌤"]] },
+  { summary: "64–72°F · storms possible late morning", icon: "⛈", title: "Storms may interrupt your ride.", hours: [[64,18,"S",9,15,"Cloudy","☁"],[66,28,"S",10,17,"Cloudy","☁"],[68,42,"SSW",13,22,"Showers possible","🌦"],[70,63,"SSW",17,30,"Thunderstorms","⛈"],[72,70,"SW",19,35,"Thunderstorms","⛈"],[71,58,"W",17,31,"Showers","🌧"]] },
+  { summary: "52–63°F · cool and mostly dry", icon: "🌤", title: "Cool but rideable.", hours: [[52,3,"NNE",7,12,"Clear","☀"],[54,4,"NNE",8,14,"Sunny","☀"],[57,5,"NE",9,16,"Mostly sunny","🌤"],[59,6,"NE",10,17,"Partly cloudy","⛅"],[61,8,"ENE",11,19,"Partly cloudy","⛅"],[63,10,"E",11,20,"Cloudy","☁"]] },
+].map((day, dayIndex) => ({ ...day, hours: day.hours.map(([temp, precipitation, direction, speed, gusts, condition, icon], index) => ({ hour: index + 6, temp, precipitation, direction, speed, gusts, condition, icon })), dayIndex }));
 const form = document.querySelector("#ride-form");
 const distance = document.querySelector("#distance");
 const distanceOutput = document.querySelector("#distance-output");
 const routeList = document.querySelector("#route-list");
 const conditionsSummary = document.querySelector("#conditions-summary");
 const hourlyForecastElement = document.querySelector("#hourly-forecast");
+const daySelect = document.querySelector("#ride-day");
+const warning = document.querySelector("#ride-warning");
 const menus = document.querySelectorAll(".menu");
 const installButton = document.querySelector("#install-button");
 let installPrompt;
 
-function windForHour(hour) {
-  const forecast = hourlyForecast.find(item => item.hour === hour) || hourlyForecast[2];
+function dayLabel(index) {
+  const date = new Date(); date.setDate(date.getDate() + index + 1);
+  return index === 0 ? "Tomorrow" : date.toLocaleDateString(undefined, { weekday: "long" });
+}
+function dayDate(index) {
+  const date = new Date(); date.setDate(date.getDate() + index + 1);
+  return date.toLocaleDateString(undefined, { month: "short", day: "numeric" });
+}
+function selectedDay() { return weatherDays[Number(daySelect.value)]; }
+function windForHour(hour, day = selectedDay()) {
+  const forecast = day.hours.find(item => item.hour === hour) || day.hours[2];
   return { from: forecast.direction === "SW" ? 225 : 205, speed: forecast.speed, label: forecast.direction, gusts: forecast.gusts, temp: forecast.temp, precipitation: forecast.precipitation };
 }
 function formatHour(hour) { return `${hour > 12 ? hour - 12 : hour}:00 ${hour >= 12 ? "PM" : "AM"}`; }
-function renderHourlyForecast(selectedHour) {
-  hourlyForecastElement.innerHTML = hourlyForecast.map(item => `<article class="hour-card${item.hour === selectedHour ? " selected" : ""}"><p class="hour-time">${formatHour(item.hour)}${item.hour === selectedHour ? " · START" : ""}</p><div class="weather-icon" aria-hidden="true">${item.icon}</div><p class="hour-temp">${item.temp}°</p><p class="hour-condition">${item.condition}</p><p class="weather-line"><span>Precip.</span><strong>${item.precipitation}%</strong></p><p class="weather-line"><span>Wind</span><strong>${item.direction} ${item.speed} mph</strong></p><p class="weather-line"><span>Gusts</span><strong>${item.gusts} mph</strong></p></article>`).join("");
+function renderHourlyForecast(selectedHour, day) {
+  hourlyForecastElement.innerHTML = day.hours.map(item => `<article class="hour-card${item.hour === selectedHour ? " selected" : ""}"><p class="hour-time">${formatHour(item.hour)}${item.hour === selectedHour ? " · START" : ""}</p><div class="weather-icon" aria-hidden="true">${item.icon}</div><p class="hour-temp">${item.temp}°</p><p class="hour-condition">${item.condition}</p><p class="weather-line"><span>Precip.</span><strong>${item.precipitation}%</strong></p><p class="weather-line"><span>Wind</span><strong>${item.direction} ${item.speed} mph</strong></p><p class="weather-line"><span>Gusts</span><strong>${item.gusts} mph</strong></p></article>`).join("");
+}
+function renderDayDetails(day, hour) {
+  const weather = windForHour(hour, day);
+  document.querySelector("#hero-weather-icon").textContent = day.icon;
+  document.querySelector("#hero-weather-title").textContent = day.title;
+  document.querySelector("#hero-weather-summary").textContent = day.summary;
+  document.querySelector("#forecast-eyebrow").textContent = `${dayLabel(day.dayIndex).toUpperCase()}'S FORECAST`;
+  document.querySelector("#forecast-title").textContent = `${dayLabel(day.dayIndex)} · ${dayDate(day.dayIndex)}`;
+  document.querySelector("#recommendations-title").textContent = `Your best routes for ${dayLabel(day.dayIndex).toLowerCase()}`;
+  document.querySelector("#rain-hours").textContent = day.hours.filter(item => item.precipitation >= 40).length;
+  document.querySelector("#day-high").textContent = `${Math.max(...day.hours.map(item => item.temp))}°`;
+  const warnings = [];
+  if (weather.precipitation >= 40) warnings.push(`${weather.precipitation}% chance of precipitation at your planned start time`);
+  if (weather.gusts >= 28) warnings.push(`gusts up to ${weather.gusts} mph`);
+  if (weather.temp <= 45 || weather.temp >= 90) warnings.push(`${weather.temp}° temperature at departure`);
+  if (/Thunderstorm/.test(day.hours.find(item => item.hour === hour)?.condition || "")) warnings.push("thunderstorms are forecast");
+  warning.hidden = warnings.length === 0;
+  document.querySelector("#warning-copy").textContent = warnings.length ? `Consider another day or departure time: ${warnings.join(" and ")}.` : "";
 }
 function windComponent(routeHeading, windFrom, speed) { return Math.cos((routeHeading - windFrom) * Math.PI / 180) * speed; }
 function scoreRoute(route, desiredMiles, preference, rideType, weather) {
@@ -48,14 +78,16 @@ function routeReason(route, preference, weather) {
   return favorable ? "Wind works in your preferred direction; the return reverses it." : "Strong distance match, with a less favorable wind angle.";
 }
 function renderRoutes() {
-  const desiredMiles = Number(distance.value); const hour = Number(document.querySelector("#ride-time").value); const preference = document.querySelector("#wind-preference").value; const rideType = document.querySelector("#ride-type").value; const weather = windForHour(hour);
+  const desiredMiles = Number(distance.value); const hour = Number(document.querySelector("#ride-time").value); const preference = document.querySelector("#wind-preference").value; const rideType = document.querySelector("#ride-type").value; const day = selectedDay(); const weather = windForHour(hour, day);
   const sorted = routes.map(route => ({ ...route, score: scoreRoute(route, desiredMiles, preference, rideType, weather) })).sort((a, b) => b.score - a.score);
   conditionsSummary.textContent = `${weather.label} ${weather.speed} mph at ${hour}:00 AM`;
-  renderHourlyForecast(hour);
+  renderHourlyForecast(hour, day);
+  renderDayDetails(day, hour);
   routeList.innerHTML = sorted.map((route, index) => `<article class="route-card"><div class="rank">${["🥇", "🥈", "🥉", "4"][index]}</div><div><h3 class="route-name">${route.name}</h3><p class="route-meta">${route.miles.toFixed(1)} mi · ${route.elevation.toLocaleString()} ft · ridden ${route.rides} times</p></div><p class="route-reason">${routeReason(route, preference, weather)}</p><div class="score"><strong>${route.score}</strong><span>wind score</span></div></article>`).join("");
 }
 distance.addEventListener("input", () => { distanceOutput.textContent = `${distance.value} mi`; });
 document.querySelector("#ride-time").addEventListener("change", renderRoutes);
+daySelect.addEventListener("change", renderRoutes);
 form.addEventListener("submit", event => { event.preventDefault(); renderRoutes(); document.querySelector(".results").scrollIntoView({ behavior: "smooth", block: "start" }); });
 menus.forEach(menu => menu.addEventListener("toggle", () => { if (menu.open) menus.forEach(other => { if (other !== menu) other.open = false; }); }));
 document.addEventListener("click", event => { if (!event.target.closest(".menu")) menus.forEach(menu => { menu.open = false; }); });
@@ -68,5 +100,6 @@ installButton.addEventListener("click", async () => {
   installButton.hidden = true;
 });
 window.addEventListener("appinstalled", () => { installButton.hidden = true; });
+daySelect.innerHTML = weatherDays.map((day, index) => `<option value="${index}">${dayLabel(index)} · ${dayDate(index)}</option>`).join("");
 if ("serviceWorker" in navigator) window.addEventListener("load", () => navigator.serviceWorker.register("service-worker.js"));
 renderRoutes();
