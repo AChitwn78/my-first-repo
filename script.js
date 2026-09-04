@@ -37,6 +37,7 @@ const locationStatus = document.querySelector("#explore-location");
 const findRideButton = document.querySelector("#find-ride-button");
 const routePreviewDialog = document.querySelector("#route-preview-dialog");
 const activityFolderInput = document.querySelector("#activity-folder-input");
+const activityZipInput = document.querySelector("#activity-zip-input");
 const importStatus = document.querySelector("#import-status");
 let isStravaConnected = false;
 let isGarminConnected = false;
@@ -59,6 +60,11 @@ function selectedDay() { return weatherDays[Number(daySelect.value)]; }
 function routeMode() { return document.querySelector('input[name="route-mode"]:checked').value; }
 function loadImportedRoutes() { try { return JSON.parse(localStorage.getItem("ridewise-imported-routes") || "[]"); } catch { return []; } }
 function saveImportedRoutes(routesToSave) { localStorage.setItem("ridewise-imported-routes", JSON.stringify(routesToSave)); }
+function showSavedImportStatus() {
+  if (!importStatus || !importedRoutes.length) return;
+  importStatus.dataset.state = "success";
+  importStatus.textContent = `${importedRoutes.length} imported route patterns are saved on this device.`;
+}
 function windForHour(hour, day = selectedDay()) {
   const forecast = day.hours.find(item => item.hour === hour) || day.hours[2];
   return { from: forecast.direction === "SW" ? 225 : 205, speed: forecast.speed, label: forecast.direction, gusts: forecast.gusts, temp: forecast.temp, precipitation: forecast.precipitation };
@@ -197,7 +203,7 @@ function summarizeGpx(text, metadata, filename) {
   for (let index = 1; index < points.length && headingDistance < .06; index += 1) { headingDistance += haversineMiles(points[index - 1], points[index]); headingPoint = points[index]; }
   return { name: metadata?.name || `Imported ride ${filename.replace(/\.[^.]+$/, "")}`, miles, elevation: Math.round(climbingMeters * 3.28084), outboundHeading: bearing(points[0], headingPoint), rides: 1, imported: true };
 }
-async function importActivityFolder(files) {
+async function importActivityFolder(files, onProgress = () => {}) {
   const filesToImport = Array.from(files); const activityCsv = filesToImport.find(file => file.name === "activities.csv");
   const metadata = activityCsv ? activityMetadata(await activityCsv.text()) : new Map();
   const gpxFiles = filesToImport.filter(file => /\.gpx$/i.test(file.name));
@@ -207,7 +213,10 @@ async function importActivityFolder(files) {
     const file = gpxFiles[index]; const activity = metadata.get(file.name);
     if (activity && !/ride|cycling/i.test(activity.type)) continue;
     const summary = summarizeGpx(await file.text(), activity, file.name); if (summary) summaries.push(summary);
-    if (index % 12 === 0) await new Promise(resolve => requestAnimationFrame(resolve));
+    if (index % 12 === 0) {
+      onProgress(index + 1, gpxFiles.length);
+      await new Promise(resolve => requestAnimationFrame(resolve));
+    }
   }
   const grouped = new Map();
   summaries.forEach(summary => {
@@ -216,20 +225,23 @@ async function importActivityFolder(files) {
   });
   return Array.from(grouped.values()).sort((a, b) => b.rides - a.rides || b.miles - a.miles);
 }
-distance.addEventListener("input", () => { distanceOutput.textContent = `${distance.value} mi`; });
-document.querySelector("#ride-time").addEventListener("change", renderRoutes);
-daySelect.addEventListener("change", renderRoutes);
-routeModeInputs.forEach(input => input.addEventListener("change", () => { renderRouteMode(); renderRoutes(); }));
-const chooseActivityFolder = () => activityFolderInput?.click();
-document.querySelector("#import-rides-button")?.addEventListener("click", chooseActivityFolder);
-document.querySelector("#import-rides-menu")?.addEventListener("click", chooseActivityFolder);
-activityFolderInput?.addEventListener("change", async event => {
-  const selectedFiles = event.target.files; if (!selectedFiles?.length) return;
+async function importActivityZip(file, onProgress = () => {}) {
+  if (!window.JSZip) throw new Error("ZIP support could not load. Check your connection, then try again.");
+  const archive = await window.JSZip.loadAsync(file);
+  const files = Object.values(archive.files).filter(entry => !entry.dir).map(entry => ({
+    name: entry.name.split("/").pop(),
+    text: () => entry.async("text"),
+  }));
+  return importActivityFolder(files, onProgress);
+}
+async function processActivityImport(importer) {
   importStatus.dataset.state = "";
   importStatus.textContent = "Reading your activity archive locally…";
   try {
-    importedRoutes = await importActivityFolder(selectedFiles);
-    if (!importedRoutes.length) throw new Error("No cycling GPX tracks were found in that folder.");
+    importedRoutes = await importer((completed, total) => {
+      importStatus.textContent = `Reading activity ${completed} of ${total} locally…`;
+    });
+    if (!importedRoutes.length) throw new Error("No cycling GPX tracks were found in that archive.");
     saveImportedRoutes(importedRoutes);
     importStatus.dataset.state = "success";
     importStatus.textContent = `Imported ${importedRoutes.length} route patterns from your Strava export. Demo routes have been replaced.`;
@@ -237,7 +249,26 @@ activityFolderInput?.addEventListener("change", async event => {
   } catch (error) {
     importStatus.dataset.state = "error";
     importStatus.textContent = error.message || "The import could not be completed.";
-  } finally { event.target.value = ""; }
+  }
+}
+distance.addEventListener("input", () => { distanceOutput.textContent = `${distance.value} mi`; });
+document.querySelector("#ride-time").addEventListener("change", renderRoutes);
+daySelect.addEventListener("change", renderRoutes);
+routeModeInputs.forEach(input => input.addEventListener("change", () => { renderRouteMode(); renderRoutes(); }));
+const chooseActivityFolder = () => activityFolderInput?.click();
+const chooseActivityZip = () => activityZipInput?.click();
+document.querySelector("#import-rides-button")?.addEventListener("click", chooseActivityFolder);
+document.querySelector("#import-rides-menu")?.addEventListener("click", chooseActivityFolder);
+document.querySelector("#import-zip-button")?.addEventListener("click", chooseActivityZip);
+activityFolderInput?.addEventListener("change", async event => {
+  const selectedFiles = event.target.files;
+  if (selectedFiles?.length) await processActivityImport(onProgress => importActivityFolder(selectedFiles, onProgress));
+  event.target.value = "";
+});
+activityZipInput?.addEventListener("change", async event => {
+  const selectedFile = event.target.files?.[0];
+  if (selectedFile) await processActivityImport(onProgress => importActivityZip(selectedFile, onProgress));
+  event.target.value = "";
 });
 useLocationButton?.addEventListener("click", () => {
   if (!navigator.geolocation) { locationStatus.textContent = "Location is not available in this browser. Demo routes will remain near a sample location."; return; }
@@ -305,5 +336,6 @@ form.addEventListener("submit", event => { event.preventDefault(); renderRoutes(
 menus.forEach(menu => menu.addEventListener("toggle", () => { if (menu.open) menus.forEach(other => { if (other !== menu) other.open = false; }); }));
 document.addEventListener("click", event => { if (!event.target.closest(".menu")) menus.forEach(menu => { menu.open = false; }); });
 if ("serviceWorker" in navigator) window.addEventListener("load", () => navigator.serviceWorker.register("service-worker.js"));
+showSavedImportStatus();
 renderRouteMode();
 renderRoutes();

@@ -110,8 +110,8 @@
         <button id="close-settings" class="icon-button" type="button" aria-label="Close settings">×</button>
       </div>
       <section class="import-card">
-        <div><h3>Import activity archive</h3><p>Choose the unzipped Strava export folder. GPX files are read only on this device.</p></div>
-        <button id="import-rides-button" class="outline-button" type="button">Choose folder</button>
+        <div><h3>Import activity archive</h3><p>On Mac, choose the unzipped Strava export folder. On iPhone, choose the original ZIP from Files or iCloud Drive. GPX files are read only on this device.</p></div>
+        <div class="import-actions"><button id="import-rides-button" class="outline-button" type="button">Choose folder</button><button id="import-zip-button" class="outline-button" type="button">Choose ZIP</button></div>
       </section>
       <p id="import-status" class="import-status" aria-live="polite"></p>
       <section class="connection-card">
@@ -144,6 +144,7 @@
       </section>
     </dialog>
     <input id="activity-folder-input" type="file" accept=".gpx,.fit,.tcx,.csv" multiple webkitdirectory directory hidden />
+    <input id="activity-zip-input" type="file" accept=".zip,application/zip,application/x-zip-compressed" hidden />
     <dialog id="route-preview-dialog" class="route-preview-dialog" aria-labelledby="route-preview-title">
       <div class="dialog-header">
         <div><p id="route-preview-origin" class="eyebrow">ROUTE PREVIEW</p><h2 id="route-preview-title">Route name</h2></div>
@@ -171,6 +172,7 @@
       <a href="#recommendations"><span aria-hidden="true">◎</span>Routes</a>
       <button id="settings-button" type="button" aria-label="Open settings"><span aria-hidden="true">⚙</span>Settings</button>
     </nav>
+    <script src="https://cdn.jsdelivr.net/npm/jszip@3.10.1/dist/jszip.min.js"></script>
     <script src="script.js"></script>
   </body>
 </html>
