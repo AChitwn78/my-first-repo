@@ -27,6 +27,9 @@ const settingsButton = document.querySelector("#settings-button");
 const connectStravaButton = document.querySelector("#connect-strava");
 const stravaConsent = document.querySelector("#strava-consent");
 const stravaStatus = document.querySelector("#strava-status");
+const connectGarminButton = document.querySelector("#connect-garmin");
+const garminConsent = document.querySelector("#garmin-consent");
+const garminStatus = document.querySelector("#garmin-status");
 const menus = document.querySelectorAll(".menu");
 const routeModeInputs = document.querySelectorAll('input[name="route-mode"]');
 const useLocationButton = document.querySelector("#use-location");
@@ -34,6 +37,7 @@ const locationStatus = document.querySelector("#explore-location");
 const findRideButton = document.querySelector("#find-ride-button");
 const routePreviewDialog = document.querySelector("#route-preview-dialog");
 let isStravaConnected = false;
+let isGarminConnected = false;
 let currentLocation = null;
 let displayedRoutes = [];
 
@@ -192,6 +196,24 @@ document.querySelector("#complete-demo-connection")?.addEventListener("click", (
   connectStravaButton.textContent = "Disconnect";
   connectStravaButton.hidden = false;
   stravaConsent.hidden = true;
+});
+connectGarminButton?.addEventListener("click", () => {
+  if (isGarminConnected) {
+    isGarminConnected = false;
+    garminStatus.textContent = "Not connected";
+    connectGarminButton.textContent = "Connect";
+    return;
+  }
+  garminConsent.hidden = false;
+  connectGarminButton.hidden = true;
+});
+document.querySelector("#cancel-garmin-connection")?.addEventListener("click", () => { garminConsent.hidden = true; connectGarminButton.hidden = false; });
+document.querySelector("#complete-garmin-connection")?.addEventListener("click", () => {
+  isGarminConnected = true;
+  garminStatus.textContent = "Connected (demo)";
+  connectGarminButton.textContent = "Disconnect";
+  connectGarminButton.hidden = false;
+  garminConsent.hidden = true;
 });
 settingsDialog?.addEventListener("click", event => { if (event.target === settingsDialog) settingsDialog.close(); });
 form.addEventListener("submit", event => { event.preventDefault(); renderRoutes(); document.querySelector(".results").scrollIntoView({ behavior: "smooth", block: "start" }); });

@@ -123,6 +123,20 @@
         <button id="cancel-connection" class="text-button" type="button">Not now</button>
         <p class="demo-copy">Demo only — no account or password is requested here.</p>
       </section>
+      <section class="connection-card garmin-card">
+        <div class="connection-logo garmin-logo" aria-hidden="true">G</div>
+        <div><h3>Garmin Connect</h3><p id="garmin-status">Not connected</p></div>
+        <button id="connect-garmin" class="outline-button" type="button">Connect</button>
+      </section>
+      <p class="connection-note">Connect Garmin Connect to send Ridewise™ courses to your compatible Garmin device once real route geometry is available.</p>
+      <section id="garmin-consent" class="strava-consent" hidden>
+        <div class="garmin-mark" aria-hidden="true">GARMIN CONNECT</div>
+        <h3>Connect Garmin Connect</h3>
+        <p>Production Ridewise™ will open Garmin's official consent flow. After approval, generated courses can be delivered to Garmin Connect and synced to your compatible device.</p>
+        <button id="complete-garmin-connection" class="primary-button" type="button">Continue with Garmin <span>→</span></button>
+        <button id="cancel-garmin-connection" class="text-button" type="button">Not now</button>
+        <p class="demo-copy">Demo only — no account or password is requested here.</p>
+      </section>
     </dialog>
     <dialog id="route-preview-dialog" class="route-preview-dialog" aria-labelledby="route-preview-title">
       <div class="dialog-header">
